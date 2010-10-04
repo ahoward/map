@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '0.0.1' unless defined?(Version)
+  Version = '1.0.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -10,37 +10,45 @@ class Map < Hash
   # class constructor 
   #
     def new(*args, &block)
-      map = super(&block)
-
       case args.size
         when 0
-          return map
+          super(&block)
 
         when 1
-          case arg = args.first
+          case args.first
             when Hash
-              new_from_hash(arg, map)
+              new_from_hash(args.first)
             when Array
-              new_from_array(arg, map)
+              new_from_array(args.first)
             else
-              new_from_hash(arg.to_hash, map)
+              new_from_hash(args.first.to_hash)
           end
 
         else
-          new_from_array(args, map)
+          new_from_array(args)
       end
-
-      map
     end
 
-    def new_from_hash(hash, map = new)
+    def new_from_hash(hash)
+      map = new
       map.update(hash)
       map
     end
 
-    def new_from_array(array, map = new)
+    def new_from_array(array)
+      map = new
       each_pair(array){|key, val| map[key] = val}
       map
+    end
+
+    def for(*args, &block)
+      first = args.first
+
+      if(args.size == 1 and block.nil?)
+        return first.to_map if first.respond_to?(:to_map)
+      end
+
+      new(*args, &block)
     end
 
   # iterate over arguments in pairs smartly.
@@ -351,6 +359,10 @@ class Map < Hash
 
 # converions
 #
+  def to_map
+    self
+  end
+
   def to_hash
     hash = Hash.new(default)
     each do |key, val|
@@ -378,14 +390,6 @@ class Map < Hash
   def stringify_keys!; self end
   def symbolize_keys!; self end
   def to_options!; self end
-
-  def class
-    Hash
-  end
-
-  def __class__
-    Map
-  end
 end
 
 module Kernel

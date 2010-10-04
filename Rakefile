@@ -125,7 +125,7 @@ task :gemspec do
             spec.has_rdoc = #{ has_rdoc.inspect }
             spec.test_files = #{ test_files.inspect }
             #spec.add_dependency 'lib', '>= version'
-            spec.add_dependency 'fattr'
+            #spec.add_dependency 'fattr'
 
             spec.extensions.push(*#{ extensions.inspect })
 
@@ -138,19 +138,21 @@ task :gemspec do
       }
     end
 
-  open("#{ lib }.gemspec", "w"){|fd| fd.puts template}
-  This.gemspec = "#{ lib }.gemspec"
+  Fu.mkdir_p(This.pkgdir)
+  gemspec = File.join(This.pkgdir, "#{ lib }.gemspec")
+  open(gemspec, "w"){|fd| fd.puts(template)}
+  This.gemspec = gemspec
 end
 
 task :gem => [:clean, :gemspec] do
-  Fu.mkdir_p This.pkgdir
+  Fu.mkdir_p(This.pkgdir)
   before = Dir['*.gem']
   cmd = "gem build #{ This.gemspec }"
   `#{ cmd }`
   after = Dir['*.gem']
   gem = ((after - before).first || after.first) or abort('no gem!')
-  Fu.mv gem, This.pkgdir
-  This.gem = File.basename(gem)
+  Fu.mv(gem, This.pkgdir)
+  This.gem = File.join(This.pkgdir, File.basename(gem))
 end
 
 task :readme do
@@ -206,9 +208,18 @@ task :release => [:clean, :gemspec, :gem] do
   gems = Dir[File.join(This.pkgdir, '*.gem')].flatten
   raise "which one? : #{ gems.inspect }" if gems.size > 1
   raise "no gems?" if gems.size < 1
-  cmd = "rubyforge login && rubyforge add_release #{ This.rubyforge_project } #{ This.lib } #{ This.version } #{ This.pkgdir }/#{ This.gem }"
+
+  cmd = "gem push #{ This.gem }"
   puts cmd
-  system cmd
+  puts
+  system(cmd)
+  abort("cmd(#{ cmd }) failed with (#{ $?.inspect })") unless $?.exitstatus.zero?
+
+  cmd = "rubyforge login && rubyforge add_release #{ This.rubyforge_project } #{ This.lib } #{ This.version } #{ This.gem }"
+  puts cmd
+  puts
+  system(cmd)
+  abort("cmd(#{ cmd }) failed with (#{ $?.inspect })") unless $?.exitstatus.zero?
 end
 
 
