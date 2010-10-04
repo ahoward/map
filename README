@@ -1,0 +1,26 @@
+
+m = Map.new
+
+m[:a] = :b
+m[:b] = :b
+m[:c] = :c
+
+p m.keys #=> [:a, :b, :c]  ### always ordered!
+
+
+p m[:a]  #=> :a
+p m["a"] #=> :a
+
+
+m = Map[:k, :v, :key, :val]
+m = Map[[:k, :v], [:key, :val]]
+m = Map[{:k => :v, :key => :val}]
+
+m = Map(:k, :v, :key, :val)
+m = Map([:k, :v], [:key, :val])
+m = Map(:k => :v, :key => :val)
+
+
+m.update(:k2, :v2)
+m.update(:k2 => :v2)
+
