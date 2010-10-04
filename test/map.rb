@@ -135,6 +135,40 @@ Testing Map do
     end
   end
 
+  testing 'that to_hash with a parameter returns a hash with an ordering key' do
+    map = Map.new
+    map.push 'k3', 'v3'
+    map.push 'k1', 'v1'
+    map.push 'k2', 'v2'
+    assert {map.keys == ['k3', 'k1', 'k2']}
+
+    hash = map.to_hash true
+    assert {hash['k1'] == 'v1'}
+    assert {hash['_order'] == ['k3', 'k1', 'k2']}
+  end
+
+  testing 'that to_hash with a parameter returns a hash with a custom ordering key' do
+    map = Map.new
+    map.push 'k3', 'v3'
+    map.push 'k1', 'v1'
+    map.push 'k2', 'v2'
+    assert {map.keys == ['k3', 'k1', 'k2']}
+
+    hash = map.to_hash '___order'
+    assert {hash['k1'] == 'v1'}
+    assert {hash['___order'] == ['k3', 'k1', 'k2']}
+  end
+
+  testing 'that creating with an extra parameter adds order' do
+    map = Map.new({'a' => 3, 'c' => 2, 'l' => 9, '_order' => ['l', 'a', 'c']}, true)
+    assert {map.keys == ['l', 'a', 'c']}
+  end
+
+  testing 'that creating with an extra parameter adds order' do
+    map = Map.new({'a' => 3, 'c' => 2, 'l' => 9, '___order' => ['l', 'a', 'c']}, '___order')
+    assert {map.keys == ['l', 'a', 'c']}
+  end
+
 protected
   def new_int_map(n = 1024)
     map = Map.new

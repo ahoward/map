@@ -26,6 +26,30 @@ class Map < Hash
               new_from_hash(arg.to_hash, map)
           end
 
+        when 2
+          if Hash === args[0] && (args[1] == true || String === args[1])
+            order = args[1] == true ? '_order' : args[1]
+            if args[0][order] && args[0][order].respond_to?(:map)
+              hash = args[0].clone
+              order = hash.delete order
+              arr = []
+              order.each do |key|
+                if hash.has_key? key
+                  arr.push key
+                  arr.push hash.delete(key)
+                end
+              end
+              hash.keys.each do |key|
+                arr.push key
+                arr.push hash[key]
+              end
+              new_from_array(arr, map)
+            else
+              new_from_hash(arg, map)
+            end
+          else
+            new_from_array(args, map)
+          end
         else
           new_from_array(args, map)
       end
@@ -351,12 +375,14 @@ class Map < Hash
 
 # converions
 #
-  def to_hash
+  def to_hash(order=nil)
+    order = '_order' if order == true
     hash = Hash.new(default)
     each do |key, val|
       val = val.to_hash if val.respond_to?(:to_hash)
       hash[key] = val
     end
+    hash[order] = keys
     hash
   end
 
