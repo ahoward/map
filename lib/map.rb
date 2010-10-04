@@ -41,12 +41,12 @@ class Map < Hash
                 arr.push key
                 arr.push hash[key]
               end
-              new_from_array(arr, map)
+              new_from_array(arr)
             else
-              new_from_hash(arg, map)
+              new_from_hash(args.first)
             end
           else
-            new_from_array(args, map)
+            new_from_array(args)
           end
         else
           new_from_array(args)
