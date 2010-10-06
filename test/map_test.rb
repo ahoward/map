@@ -105,9 +105,8 @@ Testing Map do
   end
 
   testing 'that maps are string/symbol indifferent for recursive look-ups' do
-    map = Map.new
-    assert{ map[:a] = Map[:b, 42] }
-    assert{ map[:a][:b] = Map[:c, 42] }
+    map = assert{ Map(:a => {:b => {:c => 42}}) }
+    assert{ map[:a] = {:b => {:c, 42}} }
     assert{ map[:a][:b][:c] == 42 }
     assert{ map['a'][:b][:c] == 42 }
     assert{ map['a']['b'][:c] == 42 }
@@ -116,6 +115,18 @@ Testing Map do
     assert{ map[:a]['b']['c'] == 42 }
     assert{ map[:a][:b]['c'] == 42 }
     assert{ map['a'][:b]['c'] == 42 }
+
+    map = assert{ Map(:a => [{:b => 42}]) }
+    assert{ map['a'].is_a?(Array) }
+    assert{ map['a'][0].is_a?(Map) }
+    assert{ map['a'][0]['b'] == 42 }
+
+    map = assert{ Map(:a => [ {:b => 42}, [{:c => 'forty-two'}] ]) }
+    assert{ map['a'].is_a?(Array) }
+    assert{ map['a'][0].is_a?(Map) }
+    assert{ map['a'][1].is_a?(Array) }
+    assert{ map['a'][0]['b'] == 42 }
+    assert{ map['a'][1][0]['c'] == 'forty-two' }
   end
 
   testing 'that maps support shift like a good ordered container' do
@@ -154,12 +165,13 @@ end
 
 
 
+
+
 BEGIN {
   testdir = File.dirname(File.expand_path(__FILE__))
   testlibdir = File.join(testdir, 'lib')
   rootdir = File.dirname(testdir)
   libdir = File.join(rootdir, 'lib')
-
   $LOAD_PATH.push(libdir)
   $LOAD_PATH.push(testlibdir)
 }

@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.0.0' unless defined?(Version)
+  Version = '1.1.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -118,6 +118,28 @@ class Map < Hash
     map
   end
 
+=begin
+  def Map.converters
+    @converters ||= {
+      'key' => Hash.new{|h,k| h.update(k => {})},
+      'value' => Hash.new{|h,k| h.update(k => {})}
+    }
+  end
+
+  def Map.convert(which, match, &block)
+    converters[which.to_s][match] = block
+  end
+
+  def Map.convert_key(match, &block)
+    convert('key', match, &block)
+  end
+
+  def Map.convert_value(match, &block)
+    convert('value', match, &block)
+  end
+=end
+
+
   def convert_key(key)
     key.kind_of?(Symbol) ? key.to_s : key
   end
@@ -125,9 +147,9 @@ class Map < Hash
   def convert_value(value)
     case value
       when Hash
-        map_for(value)
+        Map.for(value)
       when Array
-        value.collect{|v| Hash === v ? map_for(v) : v}
+        value.map{|v| convert_value(v)}
       else
         value
     end
