@@ -154,11 +154,23 @@ Testing Map do
     end
   end
 
+  testing 'the match operator, which can make testing hash equality simpler!' do
+    map = new_int_map
+    hash = new_int_hash
+    assert{ map =~ hash }
+  end
+
 protected
   def new_int_map(n = 1024)
-    map = Map.new
+    map = assert{ Map.new }
     n.times{|i| map[i.to_s] = i}
     map
+  end
+
+  def new_int_hash(n = 1024)
+    hash = Hash.new
+    n.times{|i| hash[i.to_s] = i}
+    hash
   end
 end
 

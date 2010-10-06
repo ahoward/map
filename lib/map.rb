@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.1.0' unless defined?(Version)
+  Version = '1.2.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -330,6 +330,10 @@ class Map < Hash
   def ==(hash)
     return false if @keys != hash.keys
     super hash
+  end
+
+  def =~(hash)
+    to_hash == Map.for(hash).to_hash
   end
 
   def invert
