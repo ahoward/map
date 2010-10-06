@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.2.0' unless defined?(Version)
+  Version = '1.2.2' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -12,7 +12,10 @@ class Map < Hash
     def new(*args, &block)
       case args.size
         when 0
-          super(&block)
+          allocate.instance_eval do
+            initialize(&block)
+            self
+          end
 
         when 1
           case args.first
@@ -170,18 +173,16 @@ class Map < Hash
   alias_method '__get__', '[]' unless method_defined?('__get__')
   alias_method '__update__', 'update' unless method_defined?('__update__')
 
-  def set(key, val)
+  def []=(key, val)
     key, val = convert(key, val)
     @keys.push(key) unless has_key?(key)
     __set__(key, val)
   end
-  alias_method 'store', 'set'
-  alias_method '[]=', 'set'
+  alias_method 'store', '[]='
 
-  def get(key)
-    __get__(key)
+  def [](key)
+    __get__(convert_key(key))
   end
-  alias_method '[]', 'get'
 
   def fetch(key, *args, &block)
     super(convert_key(key), *args, &block)
@@ -195,9 +196,7 @@ class Map < Hash
   alias_method 'member?', 'key?'
 
   def update(*args)
-    Map.each_pair(*args) do |key, val|
-      set(key, val)
-    end
+    Map.each_pair(*args){|key, val| store(key, val)}
     self
   end
   alias_method 'merge!', 'update'
