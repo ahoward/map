@@ -118,33 +118,12 @@ class Map < Hash
     map
   end
 
-=begin
-  def Map.converters
-    @converters ||= {
-      'key' => Hash.new{|h,k| h.update(k => {})},
-      'value' => Hash.new{|h,k| h.update(k => {})}
-    }
-  end
-
-  def Map.convert(which, match, &block)
-    converters[which.to_s][match] = block
-  end
-
-  def Map.convert_key(match, &block)
-    convert('key', match, &block)
-  end
-
-  def Map.convert_value(match, &block)
-    convert('value', match, &block)
-  end
-=end
-
-
   def convert_key(key)
     key.kind_of?(Symbol) ? key.to_s : key
   end
 
   def convert_value(value)
+    return value.to_map if value.respond_to?(:to_map)
     case value
       when Hash
         Map.for(value)
