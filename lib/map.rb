@@ -32,6 +32,7 @@ class Map < Hash
     def new_from_hash(hash)
       map = new
       map.update(hash)
+      map.default = hash.default
       map
     end
 
@@ -121,19 +122,20 @@ class Map < Hash
     key.kind_of?(Symbol) ? key.to_s : key
   end
 
-  def convert_val(val)
-    case val
+  def convert_value(value)
+    case value
       when Hash
-        map_for(val)
+        map_for(value)
       when Array
-        val.collect{|v| Hash === v ? map_for(v) : v}
+        value.collect{|v| Hash === v ? map_for(v) : v}
       else
-        val
+        value
     end
   end
+  alias_method('convert_val', 'convert_value')
 
   def convert(key, val)
-    [convert_key(key), convert_val(val)]
+    [convert_key(key), convert_value(val)]
   end
 
 # maps are aggressive with copy operations.  they are all deep copies.  make a

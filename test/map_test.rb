@@ -10,6 +10,14 @@ Testing Map do
     assert{ Map.new(hash = {}) }
   end
 
+  testing 'that the contructor accepts a hash and preserves the default value' do
+    hash = {}
+    hash.default = 42
+    assert{ hash[:missing] == 42 }
+    map = assert{ Map.new(hash) }
+    assert{ map[:missing] == 42 }
+  end
+
   testing 'that the constructor accepts the empty array' do
     array = []
     assert{ Map.new(array) }
