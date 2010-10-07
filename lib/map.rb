@@ -111,8 +111,12 @@ class Map < Hash
     self
   end
 
+  def klass
+    self.class
+  end
+
   def map_for(hash)
-    map = Map.new(hash)
+    map = klass.new(hash)
     map.default = hash.default
     map
   end
@@ -125,7 +129,7 @@ class Map < Hash
     return value.to_map if value.respond_to?(:to_map)
     case value
       when Hash
-        Map.for(value)
+        klass.for(value)
       when Array
         value.map{|v| convert_value(v)}
       else
@@ -323,21 +327,21 @@ class Map < Hash
 # misc
 #
   def ==(hash)
-    return false unless hash.is_a?(Map)
+    return false unless(Map === hash)
     return false if keys != hash.keys
     super hash
   end
 
   def <=>(other)
-    keys <=> Map.for(other).keys
+    keys <=> klass.for(other).keys
   end
 
   def =~(hash)
-    to_hash == Map.for(hash).to_hash
+    to_hash == klass.for(hash).to_hash
   end
 
   def invert
-    inverted = Map.new
+    inverted = klass.new
     inverted.default = self.default
     keys.each{|key| inverted[self[key]] = key }
     inverted
