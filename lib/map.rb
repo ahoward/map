@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.2.3' unless defined?(Version)
+  Version = '1.2.4' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -97,20 +97,18 @@ class Map < Hash
   end
 
   def initialize_from_hash(hash)
+    map = self
     map.update(hash)
     map.default = hash.default
   end
 
   def initialize_from_array(array)
+    map = self
     Map.each_pair(array){|key, val| map[key] = val}
   end
 
 # support methods
 #
-  def map
-    self
-  end
-
   def klass
     self.class
   end
@@ -274,7 +272,7 @@ class Map < Hash
     to_delete = []
     keys.each{|key| to_delete.push(key) if yield(key)}
     to_delete.each{|key| delete(key)}
-    map
+    self
   end
 
   def replace(hash)
