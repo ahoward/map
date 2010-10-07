@@ -7,42 +7,13 @@ class Map < Hash
       Map::Version
     end
 
-=begin
-  # class constructor 
-  #
     def new(*args, &block)
-      case args.size
-        when 0
-          super(&block)
-
-        when 1
-          case args.first
-            when Hash
-              new_from_hash(args.first)
-            when Array
-              new_from_array(args.first)
-            else
-              new_from_hash(args.first.to_hash)
-          end
-
-        else
-          new_from_array(args)
+      allocate.instance_eval do
+        @keys = []
+        initialize(*args, &block)
+        self
       end
     end
-
-    def new_from_hash(hash)
-      map = new
-      map.update(hash)
-      map.default = hash.default
-      map
-    end
-
-    def new_from_array(array)
-      map = new
-      each_pair(array){|key, val| map[key] = val}
-      map
-    end
-=end
 
     def for(*args, &block)
       first = args.first
@@ -101,11 +72,11 @@ class Map < Hash
 
 # instance constructor 
 #
-  attr_accessor :keys
+  def keys
+    @keys ||= []
+  end
 
   def initialize(*args, &block)
-    @keys = []
-
     case args.size
       when 0
         super(&block)
@@ -200,7 +171,7 @@ class Map < Hash
 
   def []=(key, val)
     key, val = convert(key, val)
-    @keys.push(key) unless has_key?(key)
+    keys.push(key) unless has_key?(key)
     __set__(key, val)
   end
   alias_method 'store', '[]='
@@ -242,7 +213,7 @@ class Map < Hash
 
   def values
     array = []
-    @keys.each{|key| array.push(self[key])}
+    keys.each{|key| array.push(self[key])}
     array
   end
   alias_method 'vals', 'values'
@@ -252,32 +223,32 @@ class Map < Hash
   end
 
   def first
-    [@keys.first, self[@keys.first]]
+    [keys.first, self[keys.first]]
   end
 
   def last
-    [@keys.last, self[@keys.last]]
+    [keys.last, self[keys.last]]
   end
 
 # iterator methods
 #
   def each_with_index
-    @keys.each_with_index{|key, index| yield([key, self[key]], index)}
+    keys.each_with_index{|key, index| yield([key, self[key]], index)}
     self
   end
 
   def each_key
-    @keys.each{|key| yield(key)}
+    keys.each{|key| yield(key)}
     self
   end
 
   def each_value
-    @keys.each{|key| yield self[key]}
+    keys.each{|key| yield self[key]}
     self
   end
 
   def each
-    @keys.each{|key| yield(key, self[key])}
+    keys.each{|key| yield(key, self[key])}
     self
   end
   alias_method 'each_pair', 'each'
@@ -286,18 +257,18 @@ class Map < Hash
 #
   def delete(key)
     key = convert_key(key)
-    @keys.delete(key)
+    keys.delete(key)
     super(key)
   end
 
   def clear
-    @keys = []
+    keys.clear
     super
   end
 
   def delete_if
     to_delete = []
-    @keys.each{|key| to_delete.push(key) if yield(key)}
+    keys.each{|key| to_delete.push(key) if yield(key)}
     to_delete.each{|key| delete(key)}
     map
   end
@@ -311,7 +282,7 @@ class Map < Hash
 #
   def shift
     unless empty?
-      key = @keys.first
+      key = keys.first
       val = delete(key)
       [key, val]
     end
@@ -322,7 +293,7 @@ class Map < Hash
       if key?(key)
         delete(key)
       else
-        @keys.unshift(key)
+        keys.unshift(key)
       end
       __set__(key, val)
     end
@@ -334,7 +305,7 @@ class Map < Hash
       if key?(key)
         delete(key)
       else
-        @keys.push(key)
+        keys.push(key)
       end
       __set__(key, val)
     end
@@ -343,7 +314,7 @@ class Map < Hash
 
   def pop
     unless empty?
-      key = @keys.last
+      key = keys.last
       val = delete(key)
       [key, val]
     end
@@ -353,7 +324,7 @@ class Map < Hash
 #
   def ==(hash)
     return false unless hash.is_a?(Map)
-    return false if @keys != hash.keys
+    return false if keys != hash.keys
     super hash
   end
 
@@ -368,7 +339,7 @@ class Map < Hash
   def invert
     inverted = Map.new
     inverted.default = self.default
-    @keys.each{|key| inverted[self[key]] = key }
+    keys.each{|key| inverted[self[key]] = key }
     inverted
   end
 
