@@ -357,6 +357,10 @@ class Map < Hash
     super hash
   end
 
+  def <=>(other)
+    keys <=> Map.for(other).keys
+  end
+
   def =~(hash)
     to_hash == Map.for(hash).to_hash
   end
