@@ -166,6 +166,15 @@ Testing Map do
     assert{ Map === o }
   end
 
+  testing 'equality' do
+    a = assert{ Map.new }
+    b = assert{ Map.new }
+    assert{ a == b}
+    assert{ a != 42 }
+    b[:k] = :v
+    assert{ a != b}
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

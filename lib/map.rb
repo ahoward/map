@@ -352,6 +352,7 @@ class Map < Hash
 # misc
 #
   def ==(hash)
+    return false unless hash.is_a?(Map)
     return false if @keys != hash.keys
     super hash
   end
