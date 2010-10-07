@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.2.2' unless defined?(Version)
+  Version = '1.2.3' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -7,15 +7,13 @@ class Map < Hash
       Map::Version
     end
 
+=begin
   # class constructor 
   #
     def new(*args, &block)
       case args.size
         when 0
-          allocate.instance_eval do
-            initialize(&block)
-            self
-          end
+          super(&block)
 
         when 1
           case args.first
@@ -44,6 +42,7 @@ class Map < Hash
       each_pair(array){|key, val| map[key] = val}
       map
     end
+=end
 
     def for(*args, &block)
       first = args.first
@@ -105,8 +104,34 @@ class Map < Hash
   attr_accessor :keys
 
   def initialize(*args, &block)
-    super
     @keys = []
+
+    case args.size
+      when 0
+        super(&block)
+
+      when 1
+        case args.first
+          when Hash
+            initialize_from_hash(args.first)
+          when Array
+            initialize_from_array(args.first)
+          else
+            initialize_from_hash(args.first.to_hash)
+        end
+
+      else
+        initialize_from_array(args)
+    end
+  end
+
+  def initialize_from_hash(hash)
+    map.update(hash)
+    map.default = hash.default
+  end
+
+  def initialize_from_array(array)
+    Map.each_pair(array){|key, val| map[key] = val}
   end
 
 # support methods

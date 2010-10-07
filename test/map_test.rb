@@ -160,6 +160,12 @@ Testing Map do
     assert{ map =~ hash }
   end
 
+  testing 'that inheritence works without cycles' do
+    c = Class.new(Map){}
+    o = assert{ c.new }
+    assert{ Map === o }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
