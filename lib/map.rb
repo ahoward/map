@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.2.6' unless defined?(Version)
+  Version = '1.2.7' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -381,18 +381,6 @@ class Map < Hash
     hash
   end
 
-  def to_yaml(*args, &block)
-    as_hash{ super }
-  end
-
-  def to_json(*args, &block)
-    as_hash{ super }
-  end
-
-  def as_json(*args, &block)
-    as_hash{ super }
-  end
-
   def as_hash
     @class = Hash
     yield
@@ -403,6 +391,48 @@ class Map < Hash
   def class
     @class || super
   end
+
+  def to_yaml(*args, &block)
+    as_hash{ super }
+  end
+
+  def to_json(state = nil, *)
+    state = JSON.generator.const_get(:State).from_state(state)
+    state.check_max_nesting if state.respond_to?(:check_max_nesting)
+    json_transform(state)
+  end
+
+  def json_shift(state)
+    state.object_nl.empty? or return ''
+    state.indent * state.depth
+  end
+  private 'json_shift'
+
+  def json_transform(state)
+    delim = ','
+    delim << state.object_nl
+    result = '{'
+    result << state.object_nl
+    depth = state.depth += 1
+    first = true
+    indent = !state.object_nl.empty?
+    each { |key,value|
+      result << delim unless first
+      result << state.indent * depth if indent
+      result << key.to_s.to_json(state)
+      result << state.space_before
+      result << ':'
+      result << state.space
+      result << value.to_json(state)
+      first = false
+    }
+    depth = state.depth -= 1
+    result << state.object_nl
+    result << state.indent * depth if indent if indent
+    result << '}'
+    result
+  end
+  private 'json_transform'
 
   def to_array
     array = []
