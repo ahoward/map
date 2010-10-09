@@ -175,6 +175,9 @@ Testing Map do
     assert{ a != b}
   end
 
+  testing 'that JSON.pretty_generate works on maps' do
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

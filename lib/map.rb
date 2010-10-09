@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.2.5' unless defined?(Version)
+  Version = '1.2.6' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -382,7 +382,26 @@ class Map < Hash
   end
 
   def to_yaml(*args, &block)
-    to_hash.to_yaml(*args, &block)
+    as_hash{ super }
+  end
+
+  def to_json(*args, &block)
+    as_hash{ super }
+  end
+
+  def as_json(*args, &block)
+    as_hash{ super }
+  end
+
+  def as_hash
+    @class = Hash
+    yield
+  ensure
+    @class = nil
+  end
+
+  def class
+    @class || super
   end
 
   def to_array
