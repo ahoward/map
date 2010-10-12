@@ -1,26 +1,39 @@
+NAME
+  map.rb
 
-m = Map.new
+SYNOPSIS
+  the ruby container you've always wanted: a string/symbol indifferent ordered
+  hash that works in all rubies
 
-m[:a] = :b
-m[:b] = :b
-m[:c] = :c
+INSTALL
+  gem install map
 
-p m.keys #=> [:a, :b, :c]  ### always ordered!
+URI
+  http://github.com/ahoward/map
 
+DESCRIPTION
+  m = Map[:k, :v, :key, :val]
+  m = Map(:k, :v, :key, :val)
 
-p m[:a]  #=> :a
-p m["a"] #=> :a
-
-
-m = Map[:k, :v, :key, :val]
-m = Map[[:k, :v], [:key, :val]]
-m = Map[{:k => :v, :key => :val}]
-
-m = Map(:k, :v, :key, :val)
-m = Map([:k, :v], [:key, :val])
-m = Map(:k => :v, :key => :val)
+  m = Map[[:k, :v], [:key, :val]]
+  m = Map[{:k => :v, :key => :val}]
 
 
-m.update(:k2, :v2)
-m.update(:k2 => :v2)
+  m = Map.new
+  m[:a] = :b
+  m[:b] = :b
+  m[:c] = :c
 
+  p m.keys #=> [:a, :b, :c]  ### always ordered!
+
+  p m[:a]  #=> :a
+  p m["a"] #=> :a
+
+  m.update(:k2 => :v2)
+  m.update(:k2, :v2)
+
+
+  m.update :nested => {:hashes => {:are => :converted}}
+
+USAGE
+  test/map_test.rb
