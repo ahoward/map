@@ -20,14 +20,15 @@ DESCRIPTION
 
 
   m = Map.new
-  m[:a] = :b
-  m[:b] = :b
-  m[:c] = :c
+  m[:a] = 0
+  m[:b] = 1
+  m[:c] = 2
 
-  p m.keys #=> [:a, :b, :c]  ### always ordered!
+  p m.keys #=> ['a','b','c']  ### always ordered!
+  p m.keys #=> [0,1,2]        ### always ordered!
 
-  p m[:a]  #=> :a
-  p m["a"] #=> :a
+  p m[:a]  #=> 0
+  p m["a"] #=> 0
 
   m.update(:k2 => :v2)
   m.update(:k2, :v2)
