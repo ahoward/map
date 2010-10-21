@@ -25,9 +25,15 @@ class Map < Hash
       libdir{ Load.call(*args, &block) }
     end
 
+    def allocate
+      super.instance_eval do
+        @keys = []
+        self
+      end
+    end
+
     def new(*args, &block)
       allocate.instance_eval do
-        @keys = []
         initialize(*args, &block)
         self
       end
@@ -35,17 +41,15 @@ class Map < Hash
 
     def for(*args, &block)
       first = args.first
-
       if(args.size == 1 and block.nil?)
         return first.to_map if first.respond_to?(:to_map)
       end
-
       new(*args, &block)
     end
 
     def coerce(other)
       return other.to_map if other.respond_to?(:to_map)
-      new().update(other.to_hash)
+      allocate.update(other.to_hash)
     end
 
   # iterate over arguments in pairs smartly.
@@ -362,7 +366,7 @@ class Map < Hash
   end
 
   def invert
-    inverted = klass.new
+    inverted = klass.allocate
     inverted.default = self.default
     keys.each{|key| inverted[self[key]] = key }
     inverted
