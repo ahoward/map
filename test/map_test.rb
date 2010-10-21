@@ -187,6 +187,13 @@ Testing Map do
     assert{ s.k.l == :v }
   end
 
+  testing 'that subclassing and clobbering initialize does not kill nested coercion' do
+    c = Class.new(Map){ def initialize(arg) end }
+    o = assert{ c.new(42) }
+    assert{ Map === o }
+    assert{ o.update(:k => {:a => :b}) }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
