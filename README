@@ -12,6 +12,10 @@ URI
   http://github.com/ahoward/map
 
 DESCRIPTION
+
+# maps are ordered.  constructing them in an ordered fashion builds them that
+# way
+#
   m = Map[:k, :v, :key, :val]
   m = Map(:k, :v, :key, :val)
 
@@ -27,14 +31,25 @@ DESCRIPTION
   p m.keys #=> ['a','b','c']  ### always ordered!
   p m.keys #=> [0,1,2]        ### always ordered!
 
+# maps don't care between symbol and string keys
+#
   p m[:a]  #=> 0
   p m["a"] #=> 0
 
+# many functions operate in a way one would expect from an ordered container
+#
   m.update(:k2 => :v2)
   m.update(:k2, :v2)
 
-
+# maps keep mapiness for even deep operations
+#
   m.update :nested => {:hashes => {:are => :converted}}
+
+# maps can give back clever little struct objects
+#
+  m = Map(:foo => {:bar => 42})
+  s = m.struct
+  p s.foo.bar #=> 42
 
 USAGE
   test/map_test.rb

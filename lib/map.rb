@@ -7,6 +7,24 @@ class Map < Hash
       Map::Version
     end
 
+    def libdir(*args, &block)
+      @libdir ||= File.expand_path(__FILE__).sub(/\.rb$/,'')
+      libdir = args.empty? ? @libdir : File.join(@libdir, *args.map{|arg| arg.to_s})
+    ensure
+      if block
+        begin
+          $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.first==libdir
+          module_eval(&block)
+        ensure
+          $LOAD_PATH.shift() if $LOAD_PATH.first==libdir
+        end
+      end
+    end
+
+    def load(*args, &block)
+      libdir{ Load.call(*args, &block) }
+    end
+
     def new(*args, &block)
       allocate.instance_eval do
         @keys = []
@@ -23,6 +41,11 @@ class Map < Hash
       end
 
       new(*args, &block)
+    end
+
+    def coerce(other)
+      return other.to_map if other.respond_to?(:to_map)
+      new().update(other.to_hash)
     end
 
   # iterate over arguments in pairs smartly.
@@ -114,7 +137,7 @@ class Map < Hash
   end
 
   def map_for(hash)
-    map = klass.new(hash)
+    map = klass.coerce(hash)
     map.default = hash.default
     map
   end
@@ -127,7 +150,7 @@ class Map < Hash
     return value.to_map if value.respond_to?(:to_map)
     case value
       when Hash
-        klass.for(value)
+        klass.coerce(value)
       when Array
         value.map{|v| convert_value(v)}
       else
@@ -331,11 +354,11 @@ class Map < Hash
   end
 
   def <=>(other)
-    keys <=> klass.for(other).keys
+    keys <=> klass.coerce(other).keys
   end
 
   def =~(hash)
-    to_hash == klass.for(hash).to_hash
+    to_hash == klass.coerce(hash).to_hash
   end
 
   def invert
@@ -423,3 +446,5 @@ private
     Map.new(*args, &block)
   end
 end
+
+Map.load('struct.rb')

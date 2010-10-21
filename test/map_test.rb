@@ -175,6 +175,18 @@ Testing Map do
     assert{ a != b}
   end
 
+  testing 'simple struct usage' do
+    a = assert{ Map.new(:k => :v) }
+    s = assert{ a.struct }
+    assert{ s.k == :v }
+  end
+
+  testing 'nested struct usage' do
+    a = assert{ Map.new(:k => {:l => :v}) }
+    s = assert{ a.struct }
+    assert{ s.k.l == :v }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
