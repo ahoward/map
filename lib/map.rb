@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.4.0' unless defined?(Version)
+  Version = '1.5.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -452,3 +452,4 @@ private
 end
 
 Map.load('struct.rb')
+Map.load('options.rb')

@@ -5,6 +5,12 @@ SYNOPSIS
   the ruby container you've always wanted: a string/symbol indifferent ordered
   hash that works in all rubies
 
+  maps are rad ordered hashes that are both ordered, string/symbol
+  indifferent, and have all sorts of sweetness like recursive convertsion,
+  more robust implementation than HashWithIndifferentAccess, support for
+  struct like (map.foo) access, and support for option/keyword access which
+  avoids several nasty classes of errors in many ruby libraries
+
 INSTALL
   gem install map
 
@@ -13,8 +19,8 @@ URI
 
 DESCRIPTION
 
-# maps are ordered.  constructing them in an ordered fashion builds them that
-# way
+# maps are always ordered.  constructing them in an ordered fashion builds
+# them that way, although the normal hash contructor is also supported
 #
   m = Map[:k, :v, :key, :val]
   m = Map(:k, :v, :key, :val)
@@ -51,5 +57,35 @@ DESCRIPTION
   s = m.struct
   p s.foo.bar #=> 42
 
+# because option parsing is such a common use case for needing string/symbol
+# indifference map.rb comes out of the box for option support
+#
+  def foo(*args, &block)
+    opts = Map.options(args)
+    a = opts.getopt(:a)
+    b = opts.getopt(:b, :default => false)
+  end
+
+
+  opts = Map.options(:a => 42, :b => nil, :c => false)
+  opts.getopt(:a)                    #=> 42
+  opts.getopt(:b)                    #=> nil
+  opts.getopt(:b, :default => 42)    #=> 42 
+  opts.getopt(:c)                    #=> false
+  opts.getopt(:d, :default => false) #=> false
+
+# this avoids such bugs as
+#  
+  options = {:read_only => true}
+  read_only = options[:read_only] || true  # should be false but is true
+
+# with options this becomes
+#
+  options = Map.options(:read_only => true)
+  read_only = options.getopt(:read_only, :default => false) #=> true
+
+# tons more goodness, see test/map_test.rb
+#
+
 USAGE
-  test/map_test.rb
+  again, see test/map_test.rb
