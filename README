@@ -6,10 +6,10 @@ SYNOPSIS
   hash that works in all rubies
 
   maps are rad ordered hashes that are both ordered, string/symbol
-  indifferent, and have all sorts of sweetness like recursive convertsion,
-  more robust implementation than HashWithIndifferentAccess, support for
-  struct like (map.foo) access, and support for option/keyword access which
-  avoids several nasty classes of errors in many ruby libraries
+  indifferent, and have all sorts of sweetness like recursive conversion, more
+  robust implementation than HashWithIndifferentAccess, support for struct
+  like (map.foo) access, and support for option/keyword access which avoids
+  several nasty classes of errors in many ruby libraries
 
 INSTALL
   gem install map
@@ -24,9 +24,11 @@ DESCRIPTION
 #
   m = Map[:k, :v, :key, :val]
   m = Map(:k, :v, :key, :val)
+  m = Map.new(:k, :v, :key, :val)
 
   m = Map[[:k, :v], [:key, :val]]
-  m = Map[{:k => :v, :key => :val}]
+  m = Map(:k => :v, :key => :val)  # ruh-oh, the input hash loses order!
+  m = Map.new(:k => :v, :key => :val)  # ruh-oh, the input hash loses order!
 
 
   m = Map.new
@@ -37,15 +39,22 @@ DESCRIPTION
   p m.keys #=> ['a','b','c']  ### always ordered!
   p m.keys #=> [0,1,2]        ### always ordered!
 
-# maps don't care between symbol and string keys
+# maps don't care about symbol vs.string keys
 #
   p m[:a]  #=> 0
   p m["a"] #=> 0
+
+# even via deep nesting 
+#
+  p m[:foo]['bar'][:baz]  #=> 42
 
 # many functions operate in a way one would expect from an ordered container
 #
   m.update(:k2 => :v2)
   m.update(:k2, :v2)
+
+  key_val_pair = m.shift
+  key_val_pair = m.pop
 
 # maps keep mapiness for even deep operations
 #
@@ -58,7 +67,7 @@ DESCRIPTION
   p s.foo.bar #=> 42
 
 # because option parsing is such a common use case for needing string/symbol
-# indifference map.rb comes out of the box for option support
+# indifference map.rb comes out of the box loaded with option support
 #
   def foo(*args, &block)
     opts = Map.options(args)
@@ -76,7 +85,7 @@ DESCRIPTION
 
 # this avoids such bugs as
 #  
-  options = {:read_only => true}
+  options = {:read_only => false}
   read_only = options[:read_only] || true  # should be false but is true
 
 # with options this becomes
