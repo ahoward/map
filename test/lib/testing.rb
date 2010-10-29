@@ -4,7 +4,9 @@
 
   def Testing(*args, &block)
     Class.new(Test::Unit::TestCase) do
-      def self.slug_for(*args)
+      eval("This=self")
+
+      def This.slug_for(*args)
         string = args.flatten.compact.join('-')
         words = string.to_s.scan(%r/\w+/)
         words.map!{|word| word.gsub %r/[^0-9a-zA-Z_-]/, ''}
@@ -12,10 +14,14 @@
         words.join('-').downcase
       end
 
-      @@testing_subclass_count = 0 unless defined?(@@testing_subclass_count) 
-      @@testing_subclass_count += 1
+      def This.testing_subclass_count
+        @testing_subclass_count ||= 1
+      ensure
+        @testing_subclass_count += 1
+      end
+
       slug = slug_for(*args).gsub(%r/-/,'_')
-      name = ['TESTING', '%03d' % @@testing_subclass_count, slug].delete_if{|part| part.empty?}.join('_')
+      name = ['TESTING', '%03d' % This.testing_subclass_count, slug].delete_if{|part| part.empty?}.join('_')
       name = name.upcase!
       const_set(:Name, name)
       def self.name() const_get(:Name) end

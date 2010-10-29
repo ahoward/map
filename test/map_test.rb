@@ -106,7 +106,7 @@ Testing Map do
 
   testing 'that maps are string/symbol indifferent for recursive look-ups' do
     map = assert{ Map(:a => {:b => {:c => 42}}) }
-    assert{ map[:a] = {:b => {:c, 42}} }
+    assert{ map[:a] = {:b => {:c => 42}} }
     assert{ map[:a][:b][:c] == 42 }
     assert{ map['a'][:b][:c] == 42 }
     assert{ map['a']['b'][:c] == 42 }
