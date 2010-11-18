@@ -142,10 +142,22 @@ class Map
 end
 
 
-def Map.options(*args, &block)
+def Map.options_for(*args, &block)
   Map::Options.for(*args, &block)
 end
 
-def Map.opts(*args, &block)
-  Map::Options.for(*args, &block)
+def Map.options_for!(*args, &block)
+  Map::Options.for(*args, &block).pop
+end
+
+class << Map
+  src = 'options_for'
+  %w( options opts ).each do |dst|
+    alias_method(dst, src)
+  end
+
+  src = 'options_for!'
+  %w( options! opts! ).each do |dst|
+    alias_method(dst, src)
+  end
 end

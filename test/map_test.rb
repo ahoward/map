@@ -194,6 +194,25 @@ Testing Map do
     assert{ o.update(:k => {:a => :b}) }
   end
 
+  testing 'that map supports basic option parsing for methods' do
+    %w( options_for options opts ).each do |method|
+      args = [0,1, {:k => :v, :a => false}]
+      opts = assert{ Map.send(method, args) }
+      assert{ opts.getopt(:k)==:v }
+      assert{ opts.getopt(:a)==false }
+      assert{ opts.getopt(:b, :default => 42)==42 }
+      assert{ args.last.is_a?(Hash) }
+    end
+  end
+
+  testing 'that bang option parsing can pop the options off' do
+    %w( options_for! options! opts! ).each do |method|
+      args = [0,1, {:k => :v, :a => false}]
+      opts = assert{ Map.send(method, args) }
+      assert{ !args.last.is_a?(Hash) }
+    end
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
