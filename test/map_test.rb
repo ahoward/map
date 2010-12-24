@@ -190,8 +190,18 @@ Testing Map do
   testing 'that subclassing and clobbering initialize does not kill nested coersion' do
     c = Class.new(Map){ def initialize(arg) end }
     o = assert{ c.new(42) }
-    assert{ Map === o }
+    assert{ o.is_a?(c) }
     assert{ o.update(:k => {:a => :b}) }
+  end
+
+  testing 'that subclassing does not kill class level coersion' do
+    c = Class.new(Map){ }
+    o = assert{ c.for(Map.new) }
+    assert{ o.is_a?(c) }
+
+    d = Class.new(c)
+    o = assert{ d.for(Map.new) }
+    assert{ o.is_a?(d) }
   end
 
   testing 'that map supports basic option parsing for methods' do

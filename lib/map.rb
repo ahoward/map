@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.6.0' unless defined?(Version)
+  Version = '1.7.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -40,15 +40,14 @@ class Map < Hash
     end
 
     def for(*args, &block)
-      first = args.first
       if(args.size == 1 and block.nil?)
-        return first.to_map if first.respond_to?(:to_map)
+        return args.first if args.first.class == self
       end
       new(*args, &block)
     end
 
     def coerce(other)
-      return other.to_map if other.respond_to?(:to_map)
+      return other if other.class == self
       allocate.update(other.to_hash)
     end
 
