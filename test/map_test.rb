@@ -204,6 +204,32 @@ Testing Map do
     assert{ o.is_a?(d) }
   end
 
+  testing 'that subclassing creates custom conversion methods' do
+    c = Class.new(Map) do
+      def self.name()
+        :C
+      end
+    end
+    assert{ c.conversion_methods.map{|x| x.to_s} == %w( to_c to_map ) }
+    o = c.new
+    assert{ o.respond_to?(:to_map) }
+    assert{ o.respond_to?(:to_c) }
+
+    assert{ o.update(:a => {:b => :c}) }
+    assert{ o[:a].class == c }
+  end
+
+  testing 'that custom conversion methods can be added' do
+    c = Class.new(Map)
+    o = c.new
+    foobar = {:k => :v}
+    def foobar.to_foobar() self end
+    c.add_conversion_method!('to_foobar')
+    assert{ c.conversion_methods.map{|x| x.to_s} == %w( to_foobar to_map ) }
+    o[:foobar] = foobar
+    assert{ o[:foobar] == foobar }
+  end
+
   testing 'that map supports basic option parsing for methods' do
     %w( options_for options opts ).each do |method|
       args = [0,1, {:k => :v, :a => false}]
@@ -220,6 +246,58 @@ Testing Map do
       args = [0,1, {:k => :v, :a => false}]
       opts = assert{ Map.send(method, args) }
       assert{ !args.last.is_a?(Hash) }
+    end
+  end
+
+  testing 'that maps can be converted to lists with numeric indexes' do
+    m = Map[0, :a, 1, :b, 2, :c]
+    assert{ m.to_list == [:a, :b, :c] }
+  end
+
+  testing 'that method missing hacks allow setting values, but not getting them until they are set' do
+    m = Map.new
+    assert{ (m.key rescue $!).is_a?(Exception) }
+    assert{ m.key = :val }
+    assert{ m[:key] == :val }
+    assert{ m.key == :val }
+  end
+
+  testing 'that maps support compound key/val setting' do
+    m = Map.new
+    assert{ m.set(:a, :b, :c, 42) }
+    assert{ m[:a][:b][:c] == 42 }
+    assert{ m.get(:a, :b, :c) == 42 }
+    assert{ m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two') }
+    assert{ m[:A].is_a?(Array) }
+    assert{ m[:A].size == 3}
+    assert{ m[:A][2] == 'forty-two' }
+    assert{ m[:x][:y].is_a?(Hash) }
+    assert{ m[:x][:y][:z] == 42.0 }
+  end
+
+  testing 'that maps support depth_first_each' do
+    m = Map.new
+    prefix = %w[ a b c ]
+    keys = []
+    n = 0.42
+
+    10.times do |i|
+      key = prefix + [i]
+      val = n
+      keys.push(key)
+      assert{ m.set(key => val) }
+      n *= 10
+    end
+
+    assert{ m.get(:a).is_a?(Hash) }
+    assert{ m.get(:a, :b).is_a?(Hash) }
+    assert{ m.get(:a, :b, :c).is_a?(Array) }
+
+    n = 0.42
+    m.depth_first_each do |key, val|
+      assert{ key == keys.shift }
+      assert{ val == n }
+      n *= 10
     end
   end
 

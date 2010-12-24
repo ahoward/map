@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '1.7.0' unless defined?(Version)
+  Version = '2.0.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -51,6 +51,38 @@ class Map < Hash
       allocate.update(other.to_hash)
     end
 
+    def conversion_methods
+      @conversion_methods ||= (
+        map_like = ancestors.select{|ancestor| ancestor <= Map}
+        type_names = map_like.map do |ancestor|
+          name = ancestor.name.to_s.strip
+          next if name.empty?
+          name.downcase.gsub(/::/, '_')
+        end.compact
+        type_names.map{|type_name| "to_#{ type_name }"}
+      )
+    end
+
+    def add_conversion_method!(method)
+      method = method.to_s.strip
+      raise ArguementError if method.empty?
+      module_eval(<<-__, __FILE__, __LINE__)
+        unless public_method_defined?(#{ method.inspect })
+          def #{ method }
+            self
+          end
+        end
+        unless conversion_methods.include?(#{ method.inspect })
+          conversion_methods.unshift(#{ method.inspect })
+        end
+      __
+    end
+
+    def inherited(other)
+      other.module_eval(&Dynamic)
+      super
+    end
+
   # iterate over arguments in pairs smartly.
   #
     def each_pair(*args)
@@ -94,6 +126,13 @@ class Map < Hash
 
     alias_method '[]', 'new'
   end
+
+  Dynamic = lambda do
+    conversion_methods.reverse_each do |method|
+      add_conversion_method!(method)
+    end
+  end
+  module_eval(&Dynamic)
 
 
 # instance constructor 
@@ -150,7 +189,10 @@ class Map < Hash
   end
 
   def convert_value(value)
-    return value.to_map if value.respond_to?(:to_map)
+    conversion_methods.each do |method|
+      return value.send(method) if value.respond_to?(method)
+    end
+
     case value
       when Hash
         klass.coerce(value)
@@ -392,10 +434,18 @@ class Map < Hash
     string = '{' + array.join(", ") + '}'
   end
 
-# converions
+# conversions
 #
-  def to_map
-    self
+  def conversion_methods
+    self.class.conversion_methods
+  end
+
+  conversion_methods.each do |method|
+    module_eval(<<-__, __FILE__, __LINE__)
+      def #{ method }
+        self
+      end
+    __
   end
 
   def to_hash
@@ -429,10 +479,20 @@ class Map < Hash
   end
   alias_method 'to_a', 'to_array'
 
+  def to_list
+    list = []
+    each_pair do |key, val|
+      list[key.to_i] = val if(key.is_a?(Numeric) or key.to_s =~ %r/^\d+$/)
+    end
+    list
+  end
+
   def to_s
     to_array.to_s
   end
 
+# oh rails - would that map.rb existed before all this non-sense...
+#
   def stringify_keys!; self end
   def stringify_keys; dup end
   def symbolize_keys!; self end
@@ -441,6 +501,156 @@ class Map < Hash
   def to_options; dup end
   def with_indifferent_access!; self end
   def with_indifferent_access; dup end
+
+# a sane method missing that only supports reading previously set values
+#
+  def method_missing(method, *args, &block)
+    method = method.to_s
+    case method
+      when /=$/
+        key = method.chomp('=')
+        value = args.shift
+        self[key] = value
+      else
+        key = method
+        super unless has_key?(key)
+        self[key]
+    end
+  end
+
+# support for compound key indexing and depth first iteration
+#
+  def get(*keys)
+    keys = keys.flatten
+    return self[keys.first] if keys.size <= 1
+    keys, key = keys[0..-2], keys[-1]
+    collection = self
+    keys.each do |k|
+      k = alphanumeric_key_for(k)
+      collection = collection[k]
+      return collection unless collection.respond_to?('[]')
+    end
+    collection[alphanumeric_key_for(key)]
+  end
+
+  def has?(*keys)
+    keys = keys.flatten
+    collection = self
+    return collection_has_key?(collection, keys.first) if keys.size <= 1
+    keys, key = keys[0..-2], keys[-1]
+    keys.each do |k|
+      k = alphanumeric_key_for(k)
+      collection = collection[k]
+      return collection unless collection.respond_to?('[]')
+    end
+    return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
+    collection_has_key?(collection, alphanumeric_key_for(key))
+  end
+
+  def collection_has_key?(collection, key)
+    case collection
+      when Hash
+        collection.has_key?(key)
+      when Array
+        return false unless key
+        (0...collection.size).include?(Integer(key))
+    end
+  end
+
+  def set(*args)
+    if args.size == 1 and args.first.is_a?(Hash)
+      options = args.shift
+    else
+      options = {}
+      value = args.pop
+      keys = args
+      options[keys] = value
+    end
+
+    options.each do |keys, value|
+      keys = Array(keys).flatten
+
+      collection = self
+      if keys.size <= 1
+        collection[keys.first] = value
+        next
+      end
+
+      key = nil
+
+      keys.each_cons(2) do |a, b|
+        a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
+
+        case b
+          when Numeric
+            collection[a] ||= []
+            raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Array)
+
+          when String, Symbol
+            collection[a] ||= {}
+            raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Hash)
+        end
+        collection = collection[a]
+        key = b
+      end
+
+      collection[key] = value
+    end
+
+    return options.values
+  end
+
+  def Map.alphanumeric_key_for(key)
+    return key if Numeric===key
+    key.to_s =~ %r/^\d+$/ ? Integer(key) : key
+  end
+
+  def alphanumeric_key_for(key)
+    Map.alphanumeric_key_for(key)
+  end
+
+  def Map.depth_first_each(enumerable, path = [], accum = [], &block)
+    Map.pairs_for(enumerable) do |key, val|
+      path.push(key)
+      if((val.is_a?(Hash) or val.is_a?(Array)) and not val.empty?)
+        Map.depth_first_each(val, path, accum)
+      else
+        accum << [path.dup, val]
+      end
+      path.pop()
+    end
+    if block
+      accum.each{|keys, val| block.call(keys, val)}
+    else
+      [path, accum]
+    end
+  end
+
+  def Map.pairs_for(enumerable, *args, &block)
+    if block.nil?
+      pairs, block = [], lambda{|*pair| pairs.push(pair)}
+    else
+      pairs = false
+    end
+
+    result =
+      case enumerable
+        when Hash
+          enumerable.each_pair(*args, &block)
+        when Array
+          enumerable.each_with_index(*args) do |val, key|
+            block.call(key, val)
+          end
+        else
+          enumerable.each_pair(*args, &block)
+      end
+
+    pairs ? pairs : result
+  end
+
+  def depth_first_each(*args, &block)
+    Map.depth_first_each(enumerable=self, *args, &block)
+  end
 end
 
 module Kernel

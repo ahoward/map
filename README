@@ -2,10 +2,10 @@ NAME
   map.rb
 
 SYNOPSIS
-  the ruby container you've always wanted: a string/symbol indifferent ordered
-  hash that works in all rubies
+  the awesome ruby container you've always wanted: a string/symbol indifferent
+  ordered hash that works in all rubies
 
-  maps are rad ordered hashes that are both ordered, string/symbol
+  maps are bitchin ordered hashes that are both ordered, string/symbol
   indifferent, and have all sorts of sweetness like recursive conversion, more
   robust implementation than HashWithIndifferentAccess, support for struct
   like (map.foo) access, and support for option/keyword access which avoids
@@ -93,8 +93,44 @@ DESCRIPTION
   options = Map.options(:read_only => true)
   read_only = options.getopt(:read_only, :default => false) #=> true
 
-# tons more goodness, see test/map_test.rb
+# maps support some really nice operators that hashes/orderedhashes do not
 #
+  m = Map.new
+  m.set(:h, :a, 0, 42)
+  m.has?(:h, :a)         #=> true
+  p m                    #=> {'h' => {'a' => [42]}} 
+  m.set(:h, :a, 1, 42.0)
+  p m                    #=> {'h' => {'a' => [42, 42.0]}} 
+
+  m.get(:h, :a, 1)       #=> 42.0
+  m.get(:x, :y, :z)      #=> nil
+  m[:x][:y][:z]          #=> raises exception!
+
+# they also support some different iteration styles
+#
+  m = Map.new
+
+  m.set(
+    [:a, :b, :c, 0] => 0,
+    [:a, :b, :c, 1] => 10,
+    [:a, :b, :c, 2] => 20,
+    [:a, :b, :c, 3] => 30
+  )
+
+  m.set(:x, :y, 42)
+  m.set(:x, :z, 42.0)
+
+  m.depth_first_each do |key, val|
+    p key => val
+  end
+
+  #=> [:a, :b, :c, 0] => 0
+  #=> [:a, :b, :c, 1] => 10
+  #=> [:a, :b, :c, 2] => 20
+  #=> [:a, :b, :c, 3] => 30
+  #=> [:x, :y] => 42
+  #=> [:x, :z] => 42.0
+
 
 USAGE
-  again, see test/map_test.rb
+  see lib/map.rb and test/map_test.rb
