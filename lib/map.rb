@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.0.0' unless defined?(Version)
+  Version = '2.1.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -502,7 +502,8 @@ class Map < Hash
   def with_indifferent_access!; self end
   def with_indifferent_access; dup end
 
-# a sane method missing that only supports reading previously set values
+# a sane method missing that only supports writing values or reading
+# *previously set* values
 #
   def method_missing(method, *args, &block)
     method = method.to_s
@@ -516,6 +517,11 @@ class Map < Hash
         super unless has_key?(key)
         self[key]
     end
+  end
+
+  def id
+    raise NoMethodError unless has_key?(:id)
+    self[:id]
   end
 
 # support for compound key indexing and depth first iteration

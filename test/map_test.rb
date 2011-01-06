@@ -262,6 +262,13 @@ Testing Map do
     assert{ m.key == :val }
   end
 
+  testing 'that #id werks' do
+    m = Map.new
+    assert{ (m.id rescue $!).is_a?(Exception) }
+    m.id = 42
+    assert{ m.id==42 }
+  end
+
   testing 'that maps support compound key/val setting' do
     m = Map.new
     assert{ m.set(:a, :b, :c, 42) }
