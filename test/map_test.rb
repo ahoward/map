@@ -282,6 +282,32 @@ Testing Map do
     assert{ m[:x][:y][:z] == 42.0 }
   end
 
+  testing 'that setting a sub-container does not eff up the container values' do
+    m = Map.new
+    assert{ m.set(:array => [0,1,2]) }
+    assert{ m.get(:array, 0) == 0 }
+    assert{ m.get(:array, 1) == 1 }
+    assert{ m.get(:array, 2) == 2 }
+
+    assert{ m.set(:array, 2, 42) }
+    assert{ m.get(:array, 0) == 0 }
+    assert{ m.get(:array, 1) == 1 }
+    assert{ m.get(:array, 2) == 42 }
+  end
+
+  testing 'that #apply selectively merges non-nil values' do
+    m = Map.new(:array => [0, 1], :hash => {:a => false, :b => nil, :c => 42})
+    defaults = Map.new(:array => [nil, nil, 2], :hash => {:b => true})
+
+    applied = assert{ m.apply(defaults) }
+    assert{ applied[:array] == [0,1,2] }
+    assert{ applied[:hash] =~ {:a => false, :b => true, :c => 42} }
+
+    assert{ m.apply!(defaults) }
+    assert{ m[:array] == [0,1,2] }
+    assert{ m[:hash] =~ {:a => false, :b => true, :c => 42} }
+  end
+
   testing 'that maps support depth_first_each' do
     m = Map.new
     prefix = %w[ a b c ]

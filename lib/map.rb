@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.1.0' unless defined?(Version)
+  Version = '2.2.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -604,6 +604,17 @@ class Map < Hash
     end
 
     return options.values
+  end
+
+  def apply(other)
+    dup.apply!(other)
+  end
+
+  def apply!(other)
+    Map.for(other).depth_first_each do |keys, value|
+      set(keys => value) unless !get(keys).nil?
+    end
+    self
   end
 
   def Map.alphanumeric_key_for(key)
