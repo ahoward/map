@@ -127,7 +127,7 @@ class Map < Hash
     alias_method '[]', 'new'
   end
 
-  Dynamic = lambda do
+  Dynamic = proc do
     conversion_methods.reverse_each do |method|
       add_conversion_method!(method)
     end

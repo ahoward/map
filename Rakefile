@@ -60,8 +60,8 @@ end
 
 task :gemspec do
   ignore_extensions = 'git', 'svn', 'tmp', /sw./, 'bak', 'gem'
-  ignore_directories = 'pkg'
-  ignore_files = 'test/log'
+  ignore_directories = ['pkg']
+  ignore_files = ['test/log']
 
   shiteless = 
     lambda do |list|
@@ -292,7 +292,7 @@ BEGIN {
 
     def unindent(s)
       indent = nil
-      s.each do |line|
+      s.each_line do |line|
       next if line =~ %r/^\s*$/
       indent = line[%r/^\s*/] and break
     end
@@ -309,7 +309,7 @@ BEGIN {
       @template = block.call.to_s
     end
     def expand(b=nil)
-      ERB.new(Util.unindent(@template)).result(b||@block)
+      ERB.new(Util.unindent(@template)).result((b||@block).binding)
     end
     alias_method 'to_s', 'expand'
   end
