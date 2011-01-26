@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.2.1' unless defined?(Version)
+  Version = '2.2.2' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -505,16 +505,16 @@ class Map < Hash
 # a sane method missing that only supports writing values or reading
 # *previously set* values
 #
-  def method_missing(method, *args, &block)
-    method = method.to_s
+  def method_missing(*args, &block)
+    method = args.first.to_s
     case method
       when /=$/
-        key = method.chomp('=')
+        key = args.shift.to_s.chomp('=')
         value = args.shift
         self[key] = value
       else
         key = method
-        super(method, *args, &block) unless has_key?(key)
+        super(*args, &block) unless has_key?(key)
         self[key]
     end
   end
