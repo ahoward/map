@@ -139,7 +139,7 @@ task :gemspec do
     end
 
   Fu.mkdir_p(This.pkgdir)
-  gemspec = File.join(This.pkgdir, "#{ lib }.gemspec")
+  gemspec = "#{ lib }.gemspec"
   open(gemspec, "w"){|fd| fd.puts(template)}
   This.gemspec = gemspec
 end
