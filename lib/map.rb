@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.2.2' unless defined?(Version)
+  Version = '2.3.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -607,10 +607,6 @@ class Map < Hash
   end
 
   def apply(other)
-    dup.apply!(other)
-  end
-
-  def apply!(other)
     Map.for(other).depth_first_each do |keys, value|
       set(keys => value) unless !get(keys).nil?
     end

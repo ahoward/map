@@ -299,11 +299,7 @@ Testing Map do
     m = Map.new(:array => [0, 1], :hash => {:a => false, :b => nil, :c => 42})
     defaults = Map.new(:array => [nil, nil, 2], :hash => {:b => true})
 
-    applied = assert{ m.apply(defaults) }
-    assert{ applied[:array] == [0,1,2] }
-    assert{ applied[:hash] =~ {:a => false, :b => true, :c => 42} }
-
-    assert{ m.apply!(defaults) }
+    assert{ m.apply(defaults) }
     assert{ m[:array] == [0,1,2] }
     assert{ m[:hash] =~ {:a => false, :b => true, :c => 42} }
   end
