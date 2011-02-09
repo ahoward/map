@@ -23,7 +23,7 @@ class Map
       value.is_a?(Map) ? value.struct : value
     end
 
-    Keys = lambda{|*keys| keys.flatten!; keys.compact!; keys.map!{|key| key.to_s}}
+    Keys = lambda{|*keys| keys.flatten!; keys.compact!; keys.map!{|key| key.to_s}} unless defined?(Keys)
 
     delegates = %w(
       inspect

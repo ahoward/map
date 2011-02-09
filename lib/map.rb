@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.3.0' unless defined?(Version)
+  Version = '2.4.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -85,25 +85,46 @@ class Map < Hash
 
   # iterate over arguments in pairs smartly.
   #
-    def each_pair(*args)
+    def each_pair(*args, &block)
       size = args.size
       parity = size % 2 == 0 ? :even : :odd
       first = args.first
 
-      return args if size == 0
-
-      if size == 1 and first.respond_to?(:each_pair)
-        first.each_pair do |key, val|
-          yield(key, val)
-        end
-        return args
+      if block.nil?
+        result = []
+        block = lambda{|*kv| result.push(kv)}
+      else
+        result = args
       end
 
-      if size == 1 and first.respond_to?(:each_slice)
-        first.each_slice(2) do |key, val|
-          yield(key, val)
+      return result if size == 0
+
+      if size == 1
+        if first.respond_to?(:each_pair)
+          first.each_pair do |key, val|
+            block.call(key, val)
+          end
+          return result
         end
-        return args
+
+        if first.respond_to?(:each_slice)
+          first.each_slice(2) do |key, val|
+            block.call(key, val)
+          end
+          return result
+        end
+
+        conversion_methods.each do |method|
+          if first.respond_to?(method)
+            first = first.send(method)
+            first.each_pair do |key, val|
+              block.call(key, val)
+            end
+            return result
+          end
+        end
+
+        raise(ArgumentError, 'odd number of arguments for Map')
       end
 
       array_of_pairs = args.all?{|a| a.is_a?(Array) and a.size == 2}
@@ -111,13 +132,13 @@ class Map < Hash
       if array_of_pairs
         args.each do |pair|
           key, val, *ignored = pair
-          yield(key, val)
+          block.call(key, val)
         end
       else
         0.step(args.size - 1, 2) do |a|
           key = args[a]
           val = args[a + 1]
-          yield(key, val)
+          block.call(key, val)
         end
       end
 
@@ -127,12 +148,14 @@ class Map < Hash
     alias_method '[]', 'new'
   end
 
-  Dynamic = lambda do
-    conversion_methods.reverse_each do |method|
-      add_conversion_method!(method)
+  unless defined?(Dynamic)
+    Dynamic = lambda do
+      conversion_methods.reverse_each do |method|
+        add_conversion_method!(method)
+      end
     end
+    module_eval(&Dynamic)
   end
-  module_eval(&Dynamic)
 
 
 # instance constructor 
@@ -178,29 +201,38 @@ class Map < Hash
     self.class
   end
 
-  def map_for(hash)
+  def Map.map_for(hash)
     map = klass.coerce(hash)
     map.default = hash.default
     map
   end
-
-  def convert_key(key)
-    key.kind_of?(Symbol) ? key.to_s : key
+  def map_for(hash)
+    klass.map_for(hash)
   end
 
-  def convert_value(value)
+  def Map.convert_key(key)
+    key.kind_of?(Symbol) ? key.to_s : key
+  end
+  def convert_key(key)
+    klass.convert_key(key)
+  end
+
+  def Map.convert_value(value)
     conversion_methods.each do |method|
       return value.send(method) if value.respond_to?(method)
     end
 
     case value
       when Hash
-        klass.coerce(value)
+        coerce(value)
       when Array
         value.map{|v| convert_value(v)}
       else
         value
     end
+  end
+  def convert_value(value)
+    klass.convert_value(value)
   end
   alias_method('convert_val', 'convert_value')
 

@@ -330,6 +330,38 @@ Testing Map do
     end
   end
 
+  testing 'that Map.each_pair works on arrays' do
+    array = %w( a b c )
+    each_pair = Map.each_pair(array)
+    assert{ each_pair == [['a', 'b'], ['c', nil]] }
+  end
+
+  testing 'that Map.each_pair works on hashes' do
+    hash = {'a' => 'b', 'c' => nil}
+    each_pair = Map.each_pair(hash)
+    assert{ each_pair == [['a', 'b'], ['c', nil]] }
+  end
+
+  testing 'that Map.each_pair works on things which respond_to conversion methods' do
+    object = Object.new
+    def object.to_map
+      {'a' => 'b', 'c' => nil}
+    end
+    each_pair = Map.each_pair(object)
+    assert{ each_pair == [['a', 'b'], ['c', nil]] }
+  end
+
+  testing 'that Map.each_pair blows up on non-hash, non-array, non-convertable objects' do
+    object = Object.new
+    result =
+      begin
+        Map.each_pair(object)
+      rescue => e
+        e
+      end
+    assert{ result.is_a?(Exception) } 
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
