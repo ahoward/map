@@ -331,35 +331,21 @@ Testing Map do
   end
 
   testing 'that Map.each_pair works on arrays' do
+    each = []
     array = %w( a b c )
-    each_pair = Map.each_pair(array)
-    assert{ each_pair == [['a', 'b'], ['c', nil]] }
+    Map.each_pair(array){|k,v| each.push(k,v)}
+    assert{ each_pair = ['a', 'b', 'c', nil] }
   end
 
-  testing 'that Map.each_pair works on hashes' do
-    hash = {'a' => 'b', 'c' => nil}
-    each_pair = Map.each_pair(hash)
-    assert{ each_pair == [['a', 'b'], ['c', nil]] }
-  end
-
-  testing 'that Map.each_pair works on things which respond_to conversion methods' do
-    object = Object.new
-    def object.to_map
-      {'a' => 'b', 'c' => nil}
-    end
-    each_pair = Map.each_pair(object)
-    assert{ each_pair == [['a', 'b'], ['c', nil]] }
-  end
-
-  testing 'that Map.each_pair blows up on non-hash, non-array, non-convertable objects' do
-    object = Object.new
-    result =
-      begin
-        Map.each_pair(object)
-      rescue => e
-        e
-      end
-    assert{ result.is_a?(Exception) } 
+  testing 'that #update and #replace accept map-ish objects' do
+    o = Object.new
+    def o.to_map() {:k => :v} end
+    m = Map.new
+    assert{ m.update(o) }
+    assert{ m =~ {:k => :v} }
+    m[:a] = :b
+    assert{ m.replace(o) }
+    assert{ m =~ {:k => :v} }
   end
 
 protected

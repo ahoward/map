@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.4.0' unless defined?(Version)
+  Version = '2.4.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -97,31 +97,28 @@ class Map < Hash
         result = args
       end
 
-      return result if size == 0
+      return args if size == 0
 
       if size == 1
+        conversion_methods.each do |method|
+          if first.respond_to?(method)
+            first = first.send(method)
+            break
+          end
+        end
+
         if first.respond_to?(:each_pair)
           first.each_pair do |key, val|
             block.call(key, val)
           end
-          return result
+          return args
         end
 
         if first.respond_to?(:each_slice)
           first.each_slice(2) do |key, val|
             block.call(key, val)
           end
-          return result
-        end
-
-        conversion_methods.each do |method|
-          if first.respond_to?(method)
-            first = first.send(method)
-            first.each_pair do |key, val|
-              block.call(key, val)
-            end
-            return result
-          end
+          return args
         end
 
         raise(ArgumentError, 'odd number of arguments for Map')
@@ -210,14 +207,18 @@ class Map < Hash
     klass.map_for(hash)
   end
 
-  def Map.convert_key(key)
+  def self.convert_key(key)
     key.kind_of?(Symbol) ? key.to_s : key
   end
   def convert_key(key)
-    klass.convert_key(key)
+    if klass.respond_to?(:convert_key)
+      klass.convert_key(key)
+    else
+      Map.convert_key(key)
+    end
   end
 
-  def Map.convert_value(value)
+  def self.convert_value(value)
     conversion_methods.each do |method|
       return value.send(method) if value.respond_to?(method)
     end
@@ -232,7 +233,11 @@ class Map < Hash
     end
   end
   def convert_value(value)
-    klass.convert_value(value)
+    if klass.respond_to?(:convert_value)
+      klass.convert_value(value)
+    else
+      Map.convert_value(value)
+    end
   end
   alias_method('convert_val', 'convert_value')
 
@@ -375,9 +380,9 @@ class Map < Hash
     self
   end
 
-  def replace(hash)
+  def replace(*args)
     clear
-    update(hash)
+    update(*args)
   end
 
 # ordered container specific methods
