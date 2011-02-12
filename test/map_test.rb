@@ -348,6 +348,16 @@ Testing Map do
     assert{ m =~ {:k => :v} }
   end
 
+  testing 'that maps with un-marshal-able objects can be copied' do
+    open(__FILE__) do |f|
+      f
+      m = Map.for(:f => f)
+      assert{ m.copy }
+      assert{ m.dup }
+      assert{ m.clone }
+    end
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

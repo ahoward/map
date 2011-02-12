@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.4.1' unless defined?(Version)
+  Version = '2.4.2' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -248,15 +248,18 @@ class Map < Hash
 # maps are aggressive with copy operations.  they are all deep copies.  make a
 # new one if you really want a shallow copy
 #
+# TODO - fallback to shallow if objects cannot be marshal'd....
   def copy
     default = self.default
     self.default = nil
-    copy = Marshal.load(Marshal.dump(self))
+    copy = Marshal.load(Marshal.dump(self)) rescue Dup.bind(self).call()
     copy.default = default
     copy
   ensure
     self.default = default
   end
+
+  Dup = instance_method(:dup)
 
   def dup
     copy
