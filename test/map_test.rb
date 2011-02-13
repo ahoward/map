@@ -227,7 +227,17 @@ Testing Map do
     c.add_conversion_method!('to_foobar')
     assert{ c.conversion_methods.map{|x| x.to_s} == %w( to_foobar to_map ) }
     o[:foobar] = foobar
-    assert{ o[:foobar] == foobar }
+    assert{ o[:foobar] =~ foobar }
+  end
+
+  testing 'that custom conversion methods are coerced - just in case' do
+    map = Map.new
+    record = Class.new do
+      def to_map() {:id => 42} end
+    end
+    map.update(:list => [record.new, record.new])
+    assert{ map.list.all?{|x| x.is_a?(Map)} }
+    assert{ map.list.all?{|x| x.id==42} }
   end
 
   testing 'that map supports basic option parsing for methods' do

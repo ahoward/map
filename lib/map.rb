@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.4.2' unless defined?(Version)
+  Version = '2.5.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -220,7 +220,7 @@ class Map < Hash
 
   def self.convert_value(value)
     conversion_methods.each do |method|
-      return value.send(method) if value.respond_to?(method)
+      return coerce(value.send(method)) if value.respond_to?(method)
     end
 
     case value
