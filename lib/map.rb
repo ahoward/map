@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.5.0' unless defined?(Version)
+  Version = '2.5.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -47,8 +47,12 @@ class Map < Hash
     end
 
     def coerce(other)
-      return other if other.class == self
-      allocate.update(other.to_hash)
+      case other
+        when self
+          return other
+        else
+          allocate.update(other.to_hash)
+      end
     end
 
     def conversion_methods
@@ -167,13 +171,18 @@ class Map < Hash
         super(&block)
 
       when 1
-        case args.first
+        first = args.first
+        case first
           when Hash
-            initialize_from_hash(args.first)
+            initialize_from_hash(first)
           when Array
-            initialize_from_array(args.first)
+            initialize_from_array(first)
           else
-            initialize_from_hash(args.first.to_hash)
+            if first.respond_to?(:to_hash)
+              initialize_from_hash(first.to_hash)
+            else
+              initialize_from_hash(first)
+            end
         end
 
       else

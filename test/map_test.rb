@@ -240,6 +240,24 @@ Testing Map do
     assert{ map.list.all?{|x| x.id==42} }
   end
 
+  testing 'that coercion is minimal' do
+    map = Map.new
+    a = Class.new(Map) do
+      def to_map() {:k => :a} end
+    end
+    b = Class.new(a) do
+      def to_map() {:k => :b} end
+    end
+    m = b.new
+    m.update(:list => [a.new, b.new])
+    assert{ m.list.first.class == b }
+    assert{ m.list.last.class == b }
+    m = a.new
+    m.update(:list => [a.new, b.new])
+    assert{ m.list.first.class == a }
+    assert{ m.list.last.class == a }
+  end
+
   testing 'that map supports basic option parsing for methods' do
     %w( options_for options opts ).each do |method|
       args = [0,1, {:k => :v, :a => false}]
