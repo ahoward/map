@@ -386,6 +386,20 @@ Testing Map do
     end
   end
 
+  testing 'that maps have a blank? method that is sane' do
+    m = Map.new(:a => 0, :b => ' ', :c => '', :d => {}, :e => [], :f => false)
+    m.each do |key, val|
+      assert{ m.blank?(key) }
+    end
+
+    m = Map.new(:a => 1, :b => '_', :d => {:k=>:v}, :e => [42], :f => true)
+    m.each do |key, val|
+      assert{ !m.blank?(key) }
+    end
+
+    assert{ Map.new.blank? }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

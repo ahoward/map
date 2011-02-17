@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.6.0' unless defined?(Version)
+  Version = '2.6.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -272,7 +272,7 @@ class Map < Hash
     self.default = default
   end
 
-  Dup = instance_method(:dup)
+  Dup = instance_method(:dup) unless defined?(Dup)
 
   def dup
     copy
@@ -604,6 +604,26 @@ class Map < Hash
     end
     return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
     collection_has_key?(collection, alphanumeric_key_for(key))
+  end
+
+  def blank?(*keys)
+    return empty? if keys.empty?
+    !has?(*keys) or Map.blank?(get(*keys))
+  end
+
+  def Map.blank?(value)
+    return value.blank? if value.respond_to?(:blank?)
+
+    case value
+      when String
+        value.strip.empty?
+      when Numeric
+        value == 0
+      when false
+        true
+      else
+        value.respond_to?(:empty?) ? value.empty? : !value
+    end
   end
 
   def collection_has_key?(collection, key)
