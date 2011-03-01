@@ -290,6 +290,12 @@ Testing Map do
     assert{ m.key == :val }
   end
 
+  testing 'that method missing with a block delegatets to fetch' do
+    m = Map.new
+    assert{ m.key{ :val } == :val }
+    assert{ !m.has_key?(:key) }
+  end
+
   testing 'that #id werks' do
     m = Map.new
     assert{ (m.id rescue $!).is_a?(Exception) }

@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.6.1' unless defined?(Version)
+  Version = '2.7.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -567,7 +567,9 @@ class Map < Hash
         self[key] = value
       else
         key = method
-        super(*args, &block) unless has_key?(key)
+        unless has_key?(key)
+          return(block ? fetch(*args, &block) : super(*args))
+        end
         self[key]
     end
   end
