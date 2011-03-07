@@ -226,7 +226,35 @@ Testing Map do
     c.add_conversion_method!('to_foobar')
     assert{ c.conversion_methods.map{|x| x.to_s} == %w( to_foobar to_map ) }
     o[:foobar] = foobar
-    assert{ o[:foobar] == foobar }
+    assert{ o[:foobar] =~ foobar }
+  end
+
+  testing 'that custom conversion methods are coerced - just in case' do
+    map = Map.new
+    record = Class.new do
+      def to_map() {:id => 42} end
+    end
+    map.update(:list => [record.new, record.new])
+    assert{ map.list.all?{|x| x.is_a?(Map)} }
+    assert{ map.list.all?{|x| x.id==42} }
+  end
+
+  testing 'that coercion is minimal' do
+    map = Map.new
+    a = Class.new(Map) do
+      def to_map() {:k => :a} end
+    end
+    b = Class.new(a) do
+      def to_map() {:k => :b} end
+    end
+    m = b.new
+    m.update(:list => [a.new, b.new])
+    assert{ m.list.first.class == b }
+    assert{ m.list.last.class == b }
+    m = a.new
+    m.update(:list => [a.new, b.new])
+    assert{ m.list.first.class == a }
+    assert{ m.list.last.class == a }
   end
 
   testing 'that map supports basic option parsing for methods' do
@@ -259,6 +287,12 @@ Testing Map do
     assert{ m.mykey = :val }
     assert{ m[:mykey] == :val }
     assert{ m.mykey == :val }
+  end
+
+  testing 'that method missing with a block delegatets to fetch' do
+    m = Map.new
+    assert{ m.key{ :val } == :val }
+    assert{ !m.has_key?(:key) }
   end
 
   testing 'that #id werks' do
@@ -298,11 +332,7 @@ Testing Map do
     m = Map.new(:array => [0, 1], :hash => {:a => false, :b => nil, :c => 42})
     defaults = Map.new(:array => [nil, nil, 2], :hash => {:b => true})
 
-    applied = assert{ m.apply(defaults) }
-    assert{ applied[:array] == [0,1,2] }
-    assert{ applied[:hash] =~ {:a => false, :b => true, :c => 42} }
-
-    assert{ m.apply!(defaults) }
+    assert{ m.apply(defaults) }
     assert{ m[:array] == [0,1,2] }
     assert{ m[:hash] =~ {:a => false, :b => true, :c => 42} }
   end
@@ -331,6 +361,48 @@ Testing Map do
       assert{ val == n }
       n *= 10
     end
+  end
+
+  testing 'that Map.each_pair works on arrays' do
+    each = []
+    array = %w( a b c )
+    Map.each_pair(array){|k,v| each.push(k,v)}
+    assert{ each_pair = ['a', 'b', 'c', nil] }
+  end
+
+  testing 'that #update and #replace accept map-ish objects' do
+    o = Object.new
+    def o.to_map() {:k => :v} end
+    m = Map.new
+    assert{ m.update(o) }
+    assert{ m =~ {:k => :v} }
+    m[:a] = :b
+    assert{ m.replace(o) }
+    assert{ m =~ {:k => :v} }
+  end
+
+  testing 'that maps with un-marshal-able objects can be copied' do
+    open(__FILE__) do |f|
+      f
+      m = Map.for(:f => f)
+      assert{ m.copy }
+      assert{ m.dup }
+      assert{ m.clone }
+    end
+  end
+
+  testing 'that maps have a blank? method that is sane' do
+    m = Map.new(:a => 0, :b => ' ', :c => '', :d => {}, :e => [], :f => false)
+    m.each do |key, val|
+      assert{ m.blank?(key) }
+    end
+
+    m = Map.new(:a => 1, :b => '_', :d => {:k=>:v}, :e => [42], :f => true)
+    m.each do |key, val|
+      assert{ !m.blank?(key) }
+    end
+
+    assert{ Map.new.blank? }
   end
 
 protected

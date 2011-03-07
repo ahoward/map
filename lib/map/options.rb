@@ -152,12 +152,12 @@ end
 
 class << Map
   src = 'options_for'
-  %w( options opts ).each do |dst|
+  %w( options opts extract_options ).each do |dst|
     alias_method(dst, src)
   end
 
   src = 'options_for!'
-  %w( options! opts! ).each do |dst|
+  %w( options! opts! extract_options! ).each do |dst|
     alias_method(dst, src)
   end
 end

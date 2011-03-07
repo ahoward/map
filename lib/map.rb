@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.2.2' unless defined?(Version)
+  Version = '2.7.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -47,8 +47,12 @@ class Map < Hash
     end
 
     def coerce(other)
-      return other if other.class == self
-      allocate.update(other.to_hash)
+      case other
+        when Map
+          other
+        else
+          allocate.update(other.to_hash)
+      end
     end
 
     def conversion_methods
@@ -85,25 +89,43 @@ class Map < Hash
 
   # iterate over arguments in pairs smartly.
   #
-    def each_pair(*args)
+    def each_pair(*args, &block)
       size = args.size
       parity = size % 2 == 0 ? :even : :odd
       first = args.first
 
-      return args if size == 0
-
-      if size == 1 and first.respond_to?(:each_pair)
-        first.each_pair do |key, val|
-          yield(key, val)
-        end
-        return args
+      if block.nil?
+        result = []
+        block = lambda{|*kv| result.push(kv)}
+      else
+        result = args
       end
 
-      if size == 1 and first.respond_to?(:each_slice)
-        first.each_slice(2) do |key, val|
-          yield(key, val)
+      return args if size == 0
+
+      if size == 1
+        conversion_methods.each do |method|
+          if first.respond_to?(method)
+            first = first.send(method)
+            break
+          end
         end
-        return args
+
+        if first.respond_to?(:each_pair)
+          first.each_pair do |key, val|
+            block.call(key, val)
+          end
+          return args
+        end
+
+        if first.respond_to?(:each_slice)
+          first.each_slice(2) do |key, val|
+            block.call(key, val)
+          end
+          return args
+        end
+
+        raise(ArgumentError, 'odd number of arguments for Map')
       end
 
       array_of_pairs = args.all?{|a| a.is_a?(Array) and a.size == 2}
@@ -111,13 +133,13 @@ class Map < Hash
       if array_of_pairs
         args.each do |pair|
           key, val, *ignored = pair
-          yield(key, val)
+          block.call(key, val)
         end
       else
         0.step(args.size - 1, 2) do |a|
           key = args[a]
           val = args[a + 1]
-          yield(key, val)
+          block.call(key, val)
         end
       end
 
@@ -127,13 +149,14 @@ class Map < Hash
     alias_method '[]', 'new'
   end
 
-  Dynamic = proc do
-    conversion_methods.reverse_each do |method|
-      add_conversion_method!(method)
+  unless defined?(Dynamic)
+    Dynamic = proc do
+      conversion_methods.reverse_each do |method|
+        add_conversion_method!(method)
+      end
     end
+    module_eval(&Dynamic)
   end
-  module_eval(&Dynamic)
-
 
 # instance constructor 
 #
@@ -147,13 +170,18 @@ class Map < Hash
         super(&block)
 
       when 1
-        case args.first
+        first = args.first
+        case first
           when Hash
-            initialize_from_hash(args.first)
+            initialize_from_hash(first)
           when Array
-            initialize_from_array(args.first)
+            initialize_from_array(first)
           else
-            initialize_from_hash(args.first.to_hash)
+            if first.respond_to?(:to_hash)
+              initialize_from_hash(first.to_hash)
+            else
+              initialize_from_hash(first)
+            end
         end
 
       else
@@ -178,28 +206,49 @@ class Map < Hash
     self.class
   end
 
-  def map_for(hash)
+  def Map.map_for(hash)
     map = klass.coerce(hash)
     map.default = hash.default
     map
   end
-
-  def convert_key(key)
-    key.kind_of?(Symbol) ? key.to_s : key
+  def map_for(hash)
+    klass.map_for(hash)
   end
 
-  def convert_value(value)
+  def self.convert_key(key)
+    key.kind_of?(Symbol) ? key.to_s : key
+  end
+  def convert_key(key)
+    if klass.respond_to?(:convert_key)
+      klass.convert_key(key)
+    else
+      Map.convert_key(key)
+    end
+  end
+
+  def self.convert_value(value)
     conversion_methods.each do |method|
-      return value.send(method) if value.respond_to?(method)
+      #return convert_value(value.send(method)) if value.respond_to?(method)
+      if value.respond_to?(method)
+        value = value.send(method)
+        break
+      end
     end
 
     case value
       when Hash
-        klass.coerce(value)
+        coerce(value)
       when Array
         value.map{|v| convert_value(v)}
       else
         value
+    end
+  end
+  def convert_value(value)
+    if klass.respond_to?(:convert_value)
+      klass.convert_value(value)
+    else
+      Map.convert_value(value)
     end
   end
   alias_method('convert_val', 'convert_value')
@@ -211,15 +260,18 @@ class Map < Hash
 # maps are aggressive with copy operations.  they are all deep copies.  make a
 # new one if you really want a shallow copy
 #
+# TODO - fallback to shallow if objects cannot be marshal'd....
   def copy
     default = self.default
     self.default = nil
-    copy = Marshal.load(Marshal.dump(self))
+    copy = Marshal.load(Marshal.dump(self)) rescue Dup.bind(self).call()
     copy.default = default
     copy
   ensure
     self.default = default
   end
+
+  Dup = instance_method(:dup) unless defined?(Dup)
 
   def dup
     copy
@@ -343,9 +395,9 @@ class Map < Hash
     self
   end
 
-  def replace(hash)
+  def replace(*args)
     clear
-    update(hash)
+    update(*args)
   end
 
 # ordered container specific methods
@@ -514,7 +566,9 @@ class Map < Hash
         self[key] = value
       else
         key = method
-        super(*args, &block) unless has_key?(key)
+        unless has_key?(key)
+          return(block ? fetch(*args, &block) : super(*args))
+        end
         self[key]
     end
   end
@@ -551,6 +605,26 @@ class Map < Hash
     end
     return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
     collection_has_key?(collection, alphanumeric_key_for(key))
+  end
+
+  def blank?(*keys)
+    return empty? if keys.empty?
+    !has?(*keys) or Map.blank?(get(*keys))
+  end
+
+  def Map.blank?(value)
+    return value.blank? if value.respond_to?(:blank?)
+
+    case value
+      when String
+        value.strip.empty?
+      when Numeric
+        value == 0
+      when false
+        true
+      else
+        value.respond_to?(:empty?) ? value.empty? : !value
+    end
   end
 
   def collection_has_key?(collection, key)
@@ -607,10 +681,6 @@ class Map < Hash
   end
 
   def apply(other)
-    dup.apply!(other)
-  end
-
-  def apply!(other)
     Map.for(other).depth_first_each do |keys, value|
       set(keys => value) unless !get(keys).nil?
     end
