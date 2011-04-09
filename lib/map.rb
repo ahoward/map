@@ -738,6 +738,8 @@ class Map < Hash
     Map.alphanumeric_key_for(key)
   end
 
+## TODO - technically this returns only leaves so the name isn't *quite* right.  re-factor for 3.0
+#
   def Map.depth_first_each(enumerable, path = [], accum = [], &block)
     Map.pairs_for(enumerable) do |key, val|
       path.push(key)
@@ -787,43 +789,6 @@ class Map < Hash
       end
 
     pairs ? pairs : result
-  end
-
-  def Map.breadth_first_each(enumerable, accum = [], &block)
-    collections = []
-
-    Map.keys_for(enumerable).each do |key|
-      val = enumerable[key]
-
-      if block
-        block.arity == 3 ? block.call(enumerable, key, val) : block.call(key, val)
-      else
-        accum << [key, val]
-      end
-
-      if((val.is_a?(Hash) or val.is_a?(Array)) and not val.empty?)
-        collections << val
-      end
-    end
-
-=begin
-    collection_keys = Map.new
-
-    collections.each do |collection|
-      keys = Map.keys_for(collection)
-      collection_keys[collection] = keys
-    end
-
-    until collection_keys.empty?
-    end
-
-=end
-
-    collections.each do |collection|
-      Map.breadth_first_each(collection, accum, &block)
-    end
-
-    block ? enumerable : accum
   end
 
   def Map.breadth_first_each(enumerable, accum = [], &block)
