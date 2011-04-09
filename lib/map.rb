@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.7.1' unless defined?(Version)
+  Version = '2.8.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -145,8 +145,17 @@ class Map < Hash
 
       args
     end
-
     alias_method '[]', 'new'
+
+    def intersection(a, b)
+      a, b, i = Map.for(a), Map.for(b), Map.new
+      a.depth_first_each{|key, val| i.set(key, val) if b.has?(key)}
+      i
+    end
+
+    def match(haystack, needle)
+      intersection(haystack, needle) == needle
+    end
   end
 
   unless defined?(Dynamic)
@@ -443,20 +452,52 @@ class Map < Hash
     end
   end
 
-# misc
+# equality / sorting / matching support 
 #
-  def ==(hash)
-    return false unless(Map === hash)
-    return false if keys != hash.keys
-    super hash
+  def ==(other)
+    case other
+      when Map
+        return false if keys != other.keys
+        super(other)
+
+      when Hash
+        self == Map.from_hash(other, self)
+
+      else
+        false
+    end
   end
 
   def <=>(other)
-    keys <=> klass.coerce(other).keys
+    cmp = keys <=> klass.coerce(other).keys
+    return cmp unless cmp.zero?
+    values <=> klass.coerce(other).values
   end
 
   def =~(hash)
     to_hash == klass.coerce(hash).to_hash
+  end
+
+# reordering support
+#
+  def reorder(order = {})
+    order = Map.for(order)
+    map = Map.new
+    keys = order.depth_first_keys | depth_first_keys
+    keys.each{|key| map.set(key, get(key))}
+    map
+  end
+
+  def reorder!(order = {})
+    replace(reorder(order))
+  end
+
+# support for building ordered hasshes from a map's own image
+#
+  def Map.from_hash(hash, order = nil)
+    map = Map.for(hash)
+    map.reorder!(order) if order
+    map
   end
 
   def invert
@@ -710,8 +751,20 @@ class Map < Hash
     if block
       accum.each{|keys, val| block.call(keys, val)}
     else
-      [path, accum]
+      accum
     end
+  end
+
+  def Map.depth_first_keys(enumerable, path = [], accum = [], &block)
+    accum = Map.depth_first_each(enumerable, path = [], accum = [], &block)
+    accum.map!{|kv| kv.first}
+    accum
+  end
+
+  def Map.depth_first_values(enumerable, path = [], accum = [], &block)
+    accum = Map.depth_first_each(enumerable, path = [], accum = [], &block)
+    accum.map!{|kv| kv.last}
+    accum
   end
 
   def Map.pairs_for(enumerable, *args, &block)
@@ -736,9 +789,94 @@ class Map < Hash
     pairs ? pairs : result
   end
 
+  def Map.breadth_first_each(enumerable, accum = [], &block)
+    collections = []
+
+    Map.keys_for(enumerable).each do |key|
+      val = enumerable[key]
+
+      if block
+        block.arity == 3 ? block.call(enumerable, key, val) : block.call(key, val)
+      else
+        accum << [key, val]
+      end
+
+      if((val.is_a?(Hash) or val.is_a?(Array)) and not val.empty?)
+        collections << val
+      end
+    end
+
+=begin
+    collection_keys = Map.new
+
+    collections.each do |collection|
+      keys = Map.keys_for(collection)
+      collection_keys[collection] = keys
+    end
+
+    until collection_keys.empty?
+    end
+
+=end
+
+    collections.each do |collection|
+      Map.breadth_first_each(collection, accum, &block)
+    end
+
+    block ? enumerable : accum
+  end
+
+  def Map.breadth_first_each(enumerable, accum = [], &block)
+    levels = []
+
+    keys = Map.depth_first_keys(enumerable)
+
+    keys.each do |key|
+      key.size.times do |i|
+        k = key.slice(0, i + 1)
+        level = k.size - 1
+        levels[level] ||= Array.new
+        last = levels[level].last
+        levels[level].push(k) unless last == k
+      end
+    end
+
+    levels.each do |level|
+      level.each do |key|
+        val = enumerable.get(key)
+        block ? block.call(key, val) : accum.push([key, val])
+      end
+    end
+
+    block ? enumerable : accum
+  end
+
+  def Map.keys_for(enumerable)
+    keys = enumerable.respond_to?(:keys) ? enumerable.keys : Array.new(enumerable.size){|i| i}
+  end
+
   def depth_first_each(*args, &block)
     Map.depth_first_each(enumerable=self, *args, &block)
   end
+
+  def depth_first_keys(*args, &block)
+    Map.depth_first_keys(enumerable=self, *args, &block)
+  end
+
+  def depth_first_values(*args, &block)
+    Map.depth_first_values(enumerable=self, *args, &block)
+  end
+
+  def breadth_first_each(*args, &block)
+    Map.breadth_first_each(enumerable=self, *args, &block)
+  end
+
+  def contains(other)
+    other = other.is_a?(Hash) ? Map.coerce(other) : other
+    breadth_first_each{|key, value| return true if value == other}
+    return false
+  end
+  alias_method 'contains?', 'contains'
 end
 
 module Kernel

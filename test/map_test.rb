@@ -371,6 +371,65 @@ Testing Map do
     assert{ each_pair = ['a', 'b', 'c', nil] }
   end
 
+  testing 'that maps support breath_first_each' do
+    map = Map[
+      'hash'         , {'x' => 'y'},
+      'nested hash'  , {'nested' => {'a' => 'b'}},
+      'array'        , [0, 1, 2],
+      'nested array' , [[3], [4], [5]],
+      'string'       , '42'
+    ]
+
+    accum = []
+    Map.breadth_first_each(map){|k, v| accum.push([k, v])}
+    expected =
+      [[["hash"], {"x"=>"y"}],
+       [["nested hash"], {"nested"=>{"a"=>"b"}}],
+       [["array"], [0, 1, 2]],
+       [["nested array"], [[3], [4], [5]]],
+       [["string"], "42"],
+       [["hash", "x"], "y"],
+       [["nested hash", "nested"], {"a"=>"b"}],
+       [["array", 0], 0],
+       [["array", 1], 1],
+       [["array", 2], 2],
+       [["nested array", 0], [3]],
+       [["nested array", 1], [4]],
+       [["nested array", 2], [5]],
+       [["nested hash", "nested", "a"], "b"],
+       [["nested array", 0, 0], 3],
+       [["nested array", 1, 0], 4],
+       [["nested array", 2, 0], 5]]
+  end
+
+  testing 'that maps have a needle-in-a-haystack like #contains? method' do
+    haystack = Map[
+      'hash'         , {'x' => 'y'},
+      'nested hash'  , {'nested' => {'a' => 'b'}},
+      'array'        , [0, 1, 2],
+      'nested array' , [[3], [4], [5]],
+      'string'       , '42'
+    ]
+
+    needles = [
+      {'x' => 'y'},
+      {'nested' => {'a' => 'b'}},
+      {'a' => 'b'},
+      [0,1,2],
+      [[3], [4], [5]],
+      [3],
+      [4],
+      [5],
+      '42',
+      0,1,2,
+      3,4,5
+    ]
+
+    needles.each do |needle|
+      assert{ haystack.contains?(needle) }
+    end
+  end
+
   testing 'that #update and #replace accept map-ish objects' do
     o = Object.new
     def o.to_map() {:k => :v} end
