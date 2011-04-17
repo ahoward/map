@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.8.0' unless defined?(Version)
+  Version = '2.9.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
