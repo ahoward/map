@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '2.9.0' unless defined?(Version)
+  Version = '2.9.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -522,10 +522,9 @@ class Map < Hash
     array
   end
 
-  def inspect
-    array = []
-    each{|key, val| array << (key.inspect + "=>" + val.inspect)}
-    string = '{' + array.join(", ") + '}'
+  def inspect(*args, &block)
+    require 'pp' unless defined?(PP)
+    PP.pp(self, '')
   end
 
 # conversions

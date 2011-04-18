@@ -465,6 +465,24 @@ Testing Map do
     assert{ Map.new.blank? }
   end
 
+  testing 'that self referential maps do not make #inspect puke' do
+    a = Map.new
+    b = Map.new
+
+    b[:a] = a
+    a[:b] = b
+
+    assert do
+      begin
+        a.inspect
+        b.inspect
+        true
+      rescue Object
+        false
+      end
+    end
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
