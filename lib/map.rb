@@ -159,7 +159,7 @@ class Map < Hash
   end
 
   unless defined?(Dynamic)
-    Dynamic = lambda do
+    Dynamic = proc do
       conversion_methods.reverse_each do |method|
         add_conversion_method!(method)
       end
@@ -168,7 +168,7 @@ class Map < Hash
   end
 
 
-# instance constructor 
+# instance constructor
 #
   def keys
     @keys ||= []
@@ -452,7 +452,7 @@ class Map < Hash
     end
   end
 
-# equality / sorting / matching support 
+# equality / sorting / matching support
 #
   def ==(other)
     case other
