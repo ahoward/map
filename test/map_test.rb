@@ -284,15 +284,15 @@ Testing Map do
 
   testing 'that method missing hacks allow setting values, but not getting them until they are set' do
     m = Map.new
-    assert{ (m.key rescue $!).is_a?(Exception) }
-    assert{ m.key = :val }
-    assert{ m[:key] == :val }
-    assert{ m.key == :val }
+    assert{ (m.missing rescue $!).is_a?(Exception) }
+    assert{ m.missing = :val }
+    assert{ m[:missing] == :val }
+    assert{ m.missing == :val }
   end
 
   testing 'that method missing with a block delegatets to fetch' do
     m = Map.new
-    assert{ m.key{ :val } == :val }
+    assert{ m.missing{ :val } == :val }
     assert{ !m.has_key?(:key) }
   end
 

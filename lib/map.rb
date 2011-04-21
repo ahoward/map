@@ -63,11 +63,13 @@ class Map < Hash
           next if name.empty?
           name.downcase.gsub(/::/, '_')
         end.compact
-        type_names.map{|type_name| "to_#{ type_name }"}
+        list = type_names.map{|type_name| "to_#{ type_name }"}
+        list.each{|method| define_conversion_method!(method)}
+        list
       )
     end
 
-    def add_conversion_method!(method)
+    def define_conversion_method!(method)
       method = method.to_s.strip
       raise ArguementError if method.empty?
       module_eval(<<-__, __FILE__, __LINE__)
@@ -75,15 +77,31 @@ class Map < Hash
           def #{ method }
             self
           end
-        end
-        unless conversion_methods.include?(#{ method.inspect })
-          conversion_methods.unshift(#{ method.inspect })
+          true
+        else
+          false
         end
       __
     end
 
+    def add_conversion_method!(method)
+      if define_conversion_method!(method)
+        method = method.to_s.strip
+        raise ArguementError if method.empty?
+        module_eval(<<-__, __FILE__, __LINE__)
+          unless conversion_methods.include?(#{ method.inspect })
+            conversion_methods.unshift(#{ method.inspect })
+          end
+        __
+        true
+      else
+        false
+      end
+    end
+
     def inherited(other)
-      other.module_eval(&Dynamic)
+    #p :other => other
+      #other.module_eval(&Dynamic)
       super
     end
 
@@ -159,7 +177,7 @@ class Map < Hash
   end
 
   unless defined?(Dynamic)
-    Dynamic = lambda do
+    Dynamic = proc do
       conversion_methods.reverse_each do |method|
         add_conversion_method!(method)
       end
