@@ -206,7 +206,6 @@ Testing Map do
 
   testing 'that subclassing creates custom conversion methods' do
     class Object::C < Map; end
-    puts C.conversion_methods.map{|x| x.to_s}.inspect
     assert{ C.conversion_methods.map{|x| x.to_s} == %w( to_c to_map ) }
     o = C.new
     assert{ o.respond_to?(:to_map) }
