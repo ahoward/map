@@ -99,12 +99,6 @@ class Map < Hash
       end
     end
 
-    def inherited(other)
-    #p :other => other
-      #other.module_eval(&Dynamic)
-      super
-    end
-
   # iterate over arguments in pairs smartly.
   #
     def each_pair(*args, &block)
@@ -175,16 +169,6 @@ class Map < Hash
       intersection(haystack, needle) == needle
     end
   end
-
-  unless defined?(Dynamic)
-    Dynamic = proc do
-      conversion_methods.reverse_each do |method|
-        add_conversion_method!(method)
-      end
-    end
-    module_eval(&Dynamic)
-  end
-
 
 # instance constructor 
 #
