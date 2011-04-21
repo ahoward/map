@@ -205,18 +205,15 @@ Testing Map do
   end
 
   testing 'that subclassing creates custom conversion methods' do
-    c = Class.new(Map) do
-      def self.name()
-        :C
-      end
-    end
-    assert{ c.conversion_methods.map{|x| x.to_s} == %w( to_c to_map ) }
-    o = c.new
+    class Object::C < Map; end
+    assert{ C.conversion_methods.map{|x| x.to_s} == %w( to_c to_map ) }
+    o = C.new
     assert{ o.respond_to?(:to_map) }
     assert{ o.respond_to?(:to_c) }
 
     assert{ o.update(:a => {:b => :c}) }
-    assert{ o[:a].class == c }
+    assert{ o[:a].class == C }
+    Object::send(:remove_const, :C)
   end
 
   testing 'that custom conversion methods can be added' do
@@ -284,16 +281,16 @@ Testing Map do
 
   testing 'that method missing hacks allow setting values, but not getting them until they are set' do
     m = Map.new
-    assert{ (m.key rescue $!).is_a?(Exception) }
-    assert{ m.key = :val }
-    assert{ m[:key] == :val }
-    assert{ m.key == :val }
+    assert{ (m.mykey rescue $!).is_a?(Exception) }
+    assert{ m.mykey = :val }
+    assert{ m[:mykey] == :val }
+    assert{ m.mykey == :val }
   end
 
   testing 'that method missing with a block delegatets to fetch' do
     m = Map.new
-    assert{ m.key{ :val } == :val }
-    assert{ !m.has_key?(:key) }
+    assert{ m.mykey{ :val } == :val }
+    assert{ !m.has_key?(:mykey) }
   end
 
   testing 'that #id werks' do
