@@ -1,7 +1,7 @@
 This.rubyforge_project = 'codeforpeople'
 This.author = "Ara T. Howard"
 This.email = "ara.t.howard@gmail.com"
-This.homepage = "http://github.com/ahoward/#{ This.lib }/tree/master"
+This.homepage = "https://github.com/ahoward/#{ This.lib }"
 
 
 task :default do
@@ -59,9 +59,9 @@ end
 
 
 task :gemspec do
-  ignore_extensions = 'git', 'svn', 'tmp', /sw./, 'bak', 'gem'
-  ignore_directories = 'pkg'
-  ignore_files = 'test/log'
+  ignore_extensions = ['git', 'svn', 'tmp', /sw./, 'bak', 'gem']
+  ignore_directories = ['pkg']
+  ignore_files = ['test/log']
 
   shiteless = 
     lambda do |list|
@@ -87,7 +87,7 @@ task :gemspec do
   version     = This.version
   files       = shiteless[Dir::glob("**/**")]
   executables = shiteless[Dir::glob("bin/*")].map{|exe| File.basename(exe)}
-  has_rdoc    = true #File.exist?('doc')
+  #has_rdoc    = true #File.exist?('doc')
   test_files  = "test/#{ lib }.rb" if File.file?("test/#{ lib }.rb")
   summary     = object.respond_to?(:summary) ? object.summary : "summary: #{ lib } kicks the ass"
   description = object.respond_to?(:description) ? object.description : "description: #{ lib } kicks the ass"
@@ -117,15 +117,15 @@ task :gemspec do
             spec.summary = #{ lib.inspect }
             spec.description = #{ description.inspect }
 
-            spec.files = #{ files.inspect }
+            spec.files =\n#{ files.sort.pretty_inspect }
             spec.executables = #{ executables.inspect }
             
             spec.require_path = "lib"
 
-            spec.has_rdoc = #{ has_rdoc.inspect }
             spec.test_files = #{ test_files.inspect }
-            #spec.add_dependency 'lib', '>= version'
-            #spec.add_dependency 'fattr'
+
+          ### spec.add_dependency 'lib', '>= version'
+          #### spec.add_dependency 'map'
 
             spec.extensions.push(*#{ extensions.inspect })
 
@@ -235,6 +235,7 @@ BEGIN {
   require 'erb'
   require 'fileutils'
   require 'rbconfig'
+  require 'pp'
 
 # fu shortcut
 #
@@ -292,7 +293,7 @@ BEGIN {
 
     def unindent(s)
       indent = nil
-      s.each do |line|
+      s.each_line do |line|
       next if line =~ %r/^\s*$/
       indent = line[%r/^\s*/] and break
     end
@@ -309,7 +310,7 @@ BEGIN {
       @template = block.call.to_s
     end
     def expand(b=nil)
-      ERB.new(Util.unindent(@template)).result(b||@block)
+      ERB.new(Util.unindent(@template)).result((b||@block).binding)
     end
     alias_method 'to_s', 'expand'
   end

@@ -3,25 +3,39 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "2.9.1"
+  spec.version = "3.0.0"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "description: map kicks the ass"
 
-  spec.files = ["lib", "lib/map", "lib/map/options.rb", "lib/map/struct.rb", "lib/map.rb", "map.gemspec", "Rakefile", "README", "test", "test/lib", "test/lib/testing.rb", "test/map_test.rb", "TODO"]
+  spec.files =
+["README",
+ "Rakefile",
+ "TODO",
+ "lib",
+ "lib/map",
+ "lib/map.rb",
+ "lib/map/options.rb",
+ "lib/map/struct.rb",
+ "map.gemspec",
+ "test",
+ "test/lib",
+ "test/lib/testing.rb",
+ "test/map_test.rb"]
+
   spec.executables = []
   
   spec.require_path = "lib"
 
-  spec.has_rdoc = true
   spec.test_files = nil
-  #spec.add_dependency 'lib', '>= version'
-  #spec.add_dependency 'fattr'
+
+### spec.add_dependency 'lib', '>= version'
+#### spec.add_dependency 'map'
 
   spec.extensions.push(*[])
 
   spec.rubyforge_project = "codeforpeople"
   spec.author = "Ara T. Howard"
   spec.email = "ara.t.howard@gmail.com"
-  spec.homepage = "http://github.com/ahoward/map/tree/master"
+  spec.homepage = "https://github.com/ahoward/map"
 end
