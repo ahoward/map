@@ -150,6 +150,13 @@ def Map.options_for!(*args, &block)
   Map::Options.for(*args, &block).pop
 end
 
+def Map.update_options_for!(args, &block)
+  options = Map.options_for!(args)
+  block.call(options)
+ensure
+  args.push(options)
+end
+
 class << Map
   src = 'options_for'
   %w( options opts extract_options ).each do |dst|
@@ -158,6 +165,11 @@ class << Map
 
   src = 'options_for!'
   %w( options! opts! extract_options! ).each do |dst|
+    alias_method(dst, src)
+  end
+
+  src = 'update_options_for!'
+  %w( update_options! update_opts! ).each do |dst|
     alias_method(dst, src)
   end
 end
