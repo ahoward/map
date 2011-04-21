@@ -291,7 +291,7 @@ Testing Map do
 
   testing 'that method missing with a block delegatets to fetch' do
     m = Map.new
-    assert{ m.key{ :val } == :val }
+    assert{ m.mykey{ :val } == :val }
     assert{ !m.has_key?(:key) }
   end
 
