@@ -625,7 +625,13 @@ class Map < Hash
 #
   def get(*keys)
     keys = keys.flatten
-    return self[keys.first] if keys.size <= 1
+    if keys.size <= 1
+      if !self.has_key?(keys.first) && block_given?
+        return yield
+      else
+        return self[keys.first] 
+      end
+    end
     keys, key = keys[0..-2], keys[-1]
     collection = self
     keys.each do |k|
@@ -633,7 +639,13 @@ class Map < Hash
       collection = collection[k]
       return collection unless collection.respond_to?('[]')
     end
-    collection[alphanumeric_key_for(key)]
+    alphanumeric_key = alphanumeric_key_for(key)
+
+    if !collection_has_key?(collection, alphanumeric_key) && block_given?
+      yield
+    else
+      collection[alphanumeric_key]
+    end
   end
 
   def has?(*keys)
