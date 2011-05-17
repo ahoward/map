@@ -232,12 +232,23 @@ Testing Map do
 
   testing 'that custom conversion methods are coerced - just in case' do
     map = Map.new
-    record = Class.new do
+    record = Class.new(Hash) do
       def to_map() {:id => 42} end
     end
     map.update(:list => [record.new, record.new])
     assert{ map.list.all?{|x| x.is_a?(Map)} }
     assert{ map.list.all?{|x| x.id==42} }
+  end
+
+  testing 'that non-hashlike classes do *not* have conversion methods called on them' do
+    map = Map.new
+    record = Class.new do
+      def to_map() {:id => 42} end
+    end
+    map.update(:record => record.new) 
+    assert{ !map.record.is_a?(Hash) } 
+    assert{ !map.record.is_a?(Map) } 
+    assert{ map.record.is_a?(record) } 
   end
 
   testing 'that coercion is minimal' do

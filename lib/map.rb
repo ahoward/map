@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '3.0.0' unless defined?(Version)
+  Version = '4.0.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -241,7 +241,8 @@ class Map < Hash
   def self.convert_value(value)
     conversion_methods.each do |method|
       #return convert_value(value.send(method)) if value.respond_to?(method)
-      if value.respond_to?(method)
+      hashlike = value.is_a?(Hash)
+      if hashlike and value.respond_to?(method)
         value = value.send(method)
         break
       end
