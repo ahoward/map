@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.0.0' unless defined?(Version)
+  Version = '4.1.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -844,6 +844,12 @@ class Map < Hash
     return false
   end
   alias_method 'contains?', 'contains'
+
+## for rails' extract_options! compat
+#
+  def extractable_options?
+    true
+  end
 end
 
 module Kernel
