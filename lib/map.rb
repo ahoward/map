@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.1.0' unless defined?(Version)
+  Version = '4.2.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -683,20 +683,21 @@ class Map < Hash
 
   def set(*args)
     if args.size == 1 and args.first.is_a?(Hash)
-      options = args.shift
+      spec = args.shift
     else
-      options = {}
+      spec = {}
       value = args.pop
       keys = args
-      options[keys] = value
+      spec[keys] = value
     end
 
-    options.each do |keys, value|
+    spec.each do |keys, value|
       keys = Array(keys).flatten
 
       collection = self
       if keys.size <= 1
-        collection[keys.first] = value
+        key = keys.first
+        collection[key] = value
         next
       end
 
@@ -721,7 +722,55 @@ class Map < Hash
       collection[key] = value
     end
 
-    return options.values
+    return spec.values
+  end
+
+  def rm(*args)
+    paths, path = args.partition{|arg| arg.is_a?(Array)}
+    paths.push(path)
+
+    paths.each do |path|
+      if path.size == 1
+        delete(*path)
+        next
+      end
+
+      branch, leaf = path[0..-2], path[-1]
+      collection = get(branch)
+
+      case collection
+        when Hash
+          key = leaf
+          collection.delete(key)
+        when Array
+          index = leaf
+          collection.delete_at(index)
+        else
+          raise(IndexError, "(#{ collection.inspect }).rm(#{ path.inspect })")
+      end
+    end
+    paths
+  end
+
+  def forcing(forcing=nil, &block)
+    @forcing ||= nil
+
+    if block
+      begin
+        previous = @forcing
+        @forcing = forcing
+        block.call()
+      ensure
+        @forcing = previous
+      end
+    else
+      @forcing
+    end
+  end
+
+  def forcing?(forcing=nil)
+    @forcing ||= nil
+    @forcing == forcing
   end
 
   def apply(other)

@@ -494,6 +494,36 @@ Testing Map do
     end
   end
 
+  testing 'that maps a clever little rm operator' do
+    map = Map.new
+    map.set :a, :b, 42
+    map.set :x, :y, 42
+    map.set :x, :z, 42
+    map.set :array, [0,1,2]
+
+    assert{ map.rm(:x, :y) }
+    assert{ map.get(:x) =~ {:z => 42} }
+    
+    assert{ map.rm(:a, :b) }
+    assert{ map.get(:a) =~ {} }
+
+    assert{ map.rm(:array, 0) }
+    assert{ map.get(:array) == [1,2] }
+    assert{ map.rm(:array, 1) }
+    assert{ map.get(:array) == [1] }
+    assert{ map.rm(:array, 0) }
+    assert{ map.get(:array) == [] }
+
+    assert{ map.rm(:array) }
+    assert{ map.get(:array).nil? }
+
+    assert{ map.rm(:a) }
+    assert{ map.get(:a).nil? }
+
+    assert{ map.rm(:x) }
+    assert{ map.get(:x).nil? }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
