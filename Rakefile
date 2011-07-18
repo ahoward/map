@@ -26,11 +26,10 @@ def run_tests!(which = nil)
         
   div = ('=' * 119)
   line = ('-' * 119)
-  helper = "-r ./test/helper.rb" if test(?e, "./test/helper.rb")
 
   test_rbs.each_with_index do |test_rb, index|
     testno = index + 1
-    command = "#{ This.ruby } -I ./lib -I ./test/lib #{ helper } #{ test_rb }"
+    command = "#{ This.ruby } -I ./lib -I ./test/lib #{ test_rb }"
 
     puts
     say(div, :color => :cyan, :bold => true)

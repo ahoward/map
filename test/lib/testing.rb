@@ -6,7 +6,7 @@
     Class.new(Test::Unit::TestCase) do
       eval("This=self")
 
-      def This.slug_for(*args)
+      def self.slug_for(*args)
         string = args.flatten.compact.join('-')
         words = string.to_s.scan(%r/\w+/)
         words.map!{|word| word.gsub %r/[^0-9a-zA-Z_-]/, ''}
