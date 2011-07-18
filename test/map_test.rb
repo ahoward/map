@@ -327,6 +327,19 @@ Testing Map do
     assert{ m[:x][:y][:z] == 42.0 }
   end
 
+  testing 'that Map#get supports providing a default value in a block' do
+    m = Map.new
+    m.set(:a, :b, :c, 42)
+    m.set(:z, 1)
+    
+    assert { m.get(:x) {1} == 1 }
+    assert { m.get(:z) {2} == 1 }
+    assert { m.get(:a, :b, :d) {1} == 1 }
+    assert { m.get(:a, :b, :c) {1} == 42 }
+    assert { m.get(:a, :b) {1} == Map.new({:c => 42}) }
+    assert { m.get(:a, :aa) {1} == 1 }
+  end
+
   testing 'that setting a sub-container does not eff up the container values' do
     m = Map.new
     assert{ m.set(:array => [0,1,2]) }
