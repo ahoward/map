@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.2.1' unless defined?(Version)
+  Version = '4.3.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -184,6 +184,8 @@ class Map < Hash
       when 1
         first = args.first
         case first
+          when nil, false
+            nil
           when Hash
             initialize_from_hash(first)
           when Array

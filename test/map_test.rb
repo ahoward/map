@@ -24,6 +24,10 @@ Testing Map do
     assert{ Map.new(*array) }
   end
 
+  testing 'that the constructor does not die when passed nil or falsea' do
+    assert{ Map.new(nil) }
+  end
+
   testing 'that the contructor accepts an even sized array' do
     arrays = [
       [ %w( k v ), %w( key val ) ],
