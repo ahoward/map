@@ -24,7 +24,7 @@ Testing Map do
     assert{ Map.new(*array) }
   end
 
-  testing 'that the constructor does not die when passed nil or falsea' do
+  testing 'that the constructor does not die when passed nil or false' do
     assert{ Map.new(nil) }
   end
 

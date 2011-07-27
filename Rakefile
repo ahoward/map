@@ -3,6 +3,9 @@ This.author = "Ara T. Howard"
 This.email = "ara.t.howard@gmail.com"
 This.homepage = "https://github.com/ahoward/#{ This.lib }"
 
+task :license do
+  open('LICENSE', 'w'){|fd| fd.puts "same as ruby's"}
+end
 
 task :default do
   puts((Rake::Task.tasks.map{|task| task.name.gsub(/::/,':')} - ['default']).sort)
