@@ -26,6 +26,7 @@ Testing Map do
 
   testing 'that the constructor does not die when passed nil or false' do
     assert{ Map.new(nil) }
+    assert{ Map.new(false) }
   end
 
   testing 'that the contructor accepts an even sized array' do
