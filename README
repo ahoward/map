@@ -139,3 +139,7 @@ DESCRIPTION
 
 USAGE
   see lib/map.rb and test/map_test.rb
+
+HISTORY
+  4.3.0:
+    - support for dot keys. map.set('a.b.c' => 42) #=> {'a'=>{'b'=>{'c'=>42}}}

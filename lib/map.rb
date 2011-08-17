@@ -229,9 +229,16 @@ class Map < Hash
     klass.map_for(hash)
   end
 
+=begin
   def self.convert_key(key)
     key.kind_of?(Symbol) ? key.to_s : key
   end
+=end
+
+  def self.convert_key(key)
+    key = key.kind_of?(Symbol) ? key.to_s : key
+  end
+
   def convert_key(key)
     if klass.respond_to?(:convert_key)
       klass.convert_key(key)
@@ -314,11 +321,13 @@ class Map < Hash
   alias_method 'store', '[]='
 
   def [](key)
-    __get__(convert_key(key))
+    key = convert_key(key)
+    __get__(key)
   end
 
   def fetch(key, *args, &block)
-    super(convert_key(key), *args, &block)
+    key = convert_key(key)
+    super(key, *args, &block)
   end
 
   def key?(key)
@@ -555,19 +564,11 @@ class Map < Hash
     hash
   end
 
-  def as_hash
-    @class = Hash
-    yield
-  ensure
-    @class = nil
-  end
-
-  def class
-    @class || super
-  end
-
-  def to_yaml(*args, &block)
-    as_hash{ super }
+  def to_yaml( opts = {} )
+    map = self
+    YAML.quick_emit(self.object_id, opts){|out|
+      out.map('!omap'){|m| map.each{|k,v| m.add(k, v)}}
+    }
   end
 
   def to_array
@@ -627,7 +628,7 @@ class Map < Hash
 # support for compound key indexing and depth first iteration
 #
   def get(*keys)
-    keys = keys.flatten
+    keys = key_for(keys)
     return self[keys.first] if keys.size <= 1
     keys, key = keys[0..-2], keys[-1]
     collection = self
@@ -640,7 +641,7 @@ class Map < Hash
   end
 
   def has?(*keys)
-    keys = keys.flatten
+    keys = key_for(keys)
     collection = self
     return collection_has_key?(collection, keys.first) if keys.size <= 1
     keys, key = keys[0..-2], keys[-1]
@@ -697,6 +698,9 @@ class Map < Hash
       keys = Array(keys).flatten
 
       collection = self
+
+      keys = key_for(keys)
+
       if keys.size <= 1
         key = keys.first
         collection[key] = value
@@ -789,6 +793,51 @@ class Map < Hash
 
   def alphanumeric_key_for(key)
     Map.alphanumeric_key_for(key)
+  end
+
+## key path support
+#
+  def self.dot_key_for(*keys)
+    dot = keys.compact.flatten.join('.')
+    dot.split(%r/\s*[,.:_-]\s*/).map{|part| part =~ %r/^\d+$/ ? Integer(part) : part}
+  end
+
+  def self.dot_keys
+    @@dot_keys = {} unless defined?(@@dot_keys)
+    @@dot_keys
+  end
+
+  def self.dot_keys?
+    ancestors.each do |ancestor|
+      return dot_keys[ancestor] if dot_keys.has_key?(ancestor)
+    end
+    false
+  end
+
+  def dot_keys?
+    @dot_keys = false unless defined?(@dot_keys)
+    @dot_keys
+  end
+
+  def self.dot_keys!(boolean = true)
+    dot_keys[self] = !!boolean
+  end
+
+  def dot_keys!(boolean = true)
+    @dot_keys = !!boolean
+  end
+
+  def self.key_for(*keys)
+    return keys.flatten unless dot_keys?
+    self.dot_key_for(*keys)
+  end
+
+  def key_for(*keys)
+    if dot_keys?
+      self.class.dot_key_for(*keys)
+    else
+      self.class.key_for(*keys)
+    end
   end
 
 ## TODO - technically this returns only leaves so the name isn't *quite* right.  re-factor for 3.0
