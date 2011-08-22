@@ -112,6 +112,10 @@ class Map
       defined?(@popped) and @popped
     end
 
+    def popped=(boolean)
+      @popped = !!boolean
+    end
+
     def pop!
       if arguments.last.is_a?(Hash)
         @popped = arguments.pop
@@ -155,6 +159,7 @@ def Map.update_options_for!(args, &block)
   block.call(options)
 ensure
   args.push(options)
+  options.popped = false
 end
 
 class << Map

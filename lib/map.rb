@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.3.0' unless defined?(Version)
+  Version = '4.4.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -633,15 +633,22 @@ class Map < Hash
       if !self.has_key?(keys.first) && block_given?
         return yield
       else
-        return self[keys.first] 
+        return self[keys.first]
       end
     end
     keys, key = keys[0..-2], keys[-1]
     collection = self
     keys.each do |k|
       k = alphanumeric_key_for(k)
-      collection = collection[k]
-      return collection unless collection.respond_to?('[]')
+      if collection_has_key?(collection, k)
+        collection = collection[k]
+      else
+        collection = nil
+      end
+      unless collection.respond_to?('[]')
+        leaf = collection
+        return leaf
+      end
     end
     alphanumeric_key = alphanumeric_key_for(key)
 
@@ -659,7 +666,11 @@ class Map < Hash
     keys, key = keys[0..-2], keys[-1]
     keys.each do |k|
       k = alphanumeric_key_for(k)
-      collection = collection[k]
+      if collection_has_key?(collection, k)
+        collection = collection[k]
+      else
+        collection = nil
+      end
       return collection unless collection.respond_to?('[]')
     end
     return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
@@ -724,13 +735,17 @@ class Map < Hash
       keys.each_cons(2) do |a, b|
         a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
 
+        exists = collection_has_key?(collection, a)
+
         case b
           when Numeric
-            collection[a] ||= []
+            #collection[a] ||= []
+            collection[a] = [] unless exists
             raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Array)
 
           when String, Symbol
-            collection[a] ||= {}
+            #collection[a] ||= {}
+            collection[a] = {} unless exists
             raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Hash)
         end
         collection = collection[a]
