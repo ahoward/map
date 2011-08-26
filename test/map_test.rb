@@ -558,6 +558,49 @@ Testing Map do
     assert{ map.get(:x).nil? }
   end
 
+  testing 'that maps a clever little question method' do
+    m = Map.new
+    m.set(:a, :b, :c, 42)
+    m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two')
+
+    assert( !m.b? )
+    assert( m.a? )
+    assert( m.a.b? )
+    assert( m.a.b.c? )
+    assert( !m.a.b.d? )
+
+    assert( m.x? )
+    assert( m.x.y? )
+    assert( m.x.y.z? )
+    assert( !m.y? )
+
+    assert( m.A? )
+  end
+
+  testing 'that maps a clever little question method on Struct' do
+    m = Map.new
+    m.set(:a, :b, :c, 42)
+    m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two')
+    s = m.struct
+
+    assert( s.a.b.c == 42   )
+    assert( s.x.y.z == 42.0 )
+
+    assert( !s.b? )
+    assert( s.a? )
+    assert( s.a.b? )
+    assert( s.a.b.c? )
+    assert( !s.a.b.d? )
+
+    assert( s.x? )
+    assert( s.x.y? )
+    assert( s.x.y.z? )
+    assert( !s.y? )
+
+    assert( s.A? )
+
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
