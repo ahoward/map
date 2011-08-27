@@ -15,6 +15,9 @@ class Map
           key = method.chomp('=')
           value = args.shift
           @map[key] = value
+        when /\?$/
+          key = method.chomp('?')
+          value = @map.has?( key )
         else
           key = method
           raise(IndexError, key) unless @map.has_key?(key)

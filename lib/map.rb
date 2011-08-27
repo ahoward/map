@@ -611,6 +611,9 @@ class Map < Hash
         key = args.shift.to_s.chomp('=')
         value = args.shift
         self[key] = value
+      when /\?$/
+        key = args.shift.to_s.chomp('?')
+        self.has?( key )
       else
         key = method
         unless has_key?(key)
