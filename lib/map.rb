@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.4.0' unless defined?(Version)
+  Version = '4.5.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -826,7 +826,7 @@ class Map < Hash
 #
   def self.dot_key_for(*keys)
     dot = keys.compact.flatten.join('.')
-    dot.split(%r/\s*[,.:_-]\s*/).map{|part| part =~ %r/^\d+$/ ? Integer(part) : part}
+    dot.split(%r/\s*[,.]\s*/).map{|part| part =~ %r/^\d+$/ ? Integer(part) : part}
   end
 
   def self.dot_keys
