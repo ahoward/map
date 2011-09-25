@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.5.0' unless defined?(Version)
+  Version = '4.5.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -624,8 +624,9 @@ class Map < Hash
   end
 
   def id
-    raise NoMethodError unless has_key?(:id)
-    self[:id]
+    return self[:id] if has_key?(:id)
+    return self[:_id] if has_key?(:_id)
+    raise NoMethodError
   end
 
 # support for compound key indexing and depth first iteration
