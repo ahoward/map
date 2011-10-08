@@ -298,12 +298,21 @@ Testing Map do
     assert{ m.to_list == [:a, :b, :c] }
   end
 
-  testing 'that method missing hacks allow setting values, but not getting them until they are set' do
+  testing 'that method_missing hacks allow setting values, but not getting them until they are set' do
     m = Map.new
     assert{ (m.missing rescue $!).is_a?(Exception) }
     assert{ m.missing = :val }
     assert{ m[:missing] == :val }
     assert{ m.missing == :val }
+  end
+
+  testing 'that method_missing hacks have sane respond_to? semantics' do
+    m = Map.new
+    assert{ !m.respond_to?(:missing) }
+    assert{ m.respond_to?(:missing=) }
+    assert{ m.missing = :val }
+    assert{ m.respond_to?(:missing) }
+    assert{ m.respond_to?(:missing=) }
   end
 
   testing 'that method missing with a block delegatets to fetch' do
