@@ -10,14 +10,6 @@ Testing Map do
     assert{ Map.new(hash = {}) }
   end
 
-  testing 'that the contructor accepts a hash and preserves the default value' do
-    hash = {}
-    hash.default = 42
-    assert{ hash[:missing] == 42 }
-    map = assert{ Map.new(hash) }
-    assert{ map[:missing] == 42 }
-  end
-
   testing 'that the constructor accepts the empty array' do
     array = []
     assert{ Map.new(array) }
@@ -586,7 +578,7 @@ Testing Map do
     assert( m.A? )
   end
 
-  testing 'that maps a clever little question method on Struct' do
+  testing 'that maps have a clever little question method on Struct' do
     m = Map.new
     m.set(:a, :b, :c, 42)
     m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two')
@@ -608,6 +600,18 @@ Testing Map do
 
     assert( s.A? )
 
+  end
+
+  testing 'that Map#default= blows up until a sane strategy for dealing with it is developed' do
+    m = Map.new
+
+    assert do
+      begin
+        m.default = 42
+      rescue Object => e
+        e.is_a?(ArgumentError)
+      end
+    end
   end
 
 protected

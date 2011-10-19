@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.6.1' unless defined?(Version)
+  Version = '4.7.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -279,10 +279,6 @@ class Map < Hash
     [convert_key(key), convert_value(val)]
   end
 
-# maps are aggressive with copy operations.  they are all deep copies.  make a
-# new one if you really want a shallow copy
-#
-# TODO - fallback to shallow if objects cannot be marshal'd....
   def copy
     default = self.default
     self.default = nil
@@ -305,6 +301,10 @@ class Map < Hash
 
   def default(key = nil)
     key.is_a?(Symbol) && include?(key = key.to_s) ? self[key] : super
+  end
+
+  def default=(value)
+    raise ArgumentError.new("Map doesn't work so well with a non-nil default value!") unless value.nil?
   end
 
 # writer/reader methods
