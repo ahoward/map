@@ -1,5 +1,5 @@
 class Map < Hash
-  Version = '4.7.0' unless defined?(Version)
+  Version = '4.7.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -623,7 +623,7 @@ class Map < Hash
     end
   end
 
-  def respond_to?(method)
+  def respond_to?(method, *args, &block)
     has_key = has_key?(method)
     setter = method.to_s =~ /=\Z/o
     !!((!has_key and setter) or has_key or super)
