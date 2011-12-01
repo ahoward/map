@@ -2,7 +2,7 @@ class Map
   module Options
     class << Options
       def for(arg)
-        hash =
+        options =
           case arg
             when Hash
               arg
@@ -14,18 +14,19 @@ class Map
               raise(ArgumentError, arg.inspect) unless arg.respond_to?(:to_hash)
               arg.to_hash
           end
-        map = Map.coerce(hash)
-      ensure
-        map.extend(Options) unless map.is_a?(Options)
+        options.extend(Options) unless options.is_a?(Options)
+        options
       end
 
       def parse(arg)
         case arg
           when Array
-            arg.extend(Arguments) unless arg.is_a?(Arguments)
-            arg.options
+            arguments = arg
+            arguments.extend(Arguments) unless arguments.is_a?(Arguments)
+            options = arguments.options
           when Hash
-            Options.for(arg)
+            options = arg
+            options = Options.for(options)
           else
             raise(ArgumentError, "`arg` should be an Array or Hash")
         end
@@ -109,27 +110,21 @@ class Map
     end
 
     def popped?
-      defined?(@popped) and @popped
-    end
-
-    def popped=(boolean)
-      @popped = !!boolean
+      arguments and arguments.last != self
     end
 
     def pop!
-      if arguments.last.is_a?(Hash)
-        @popped = arguments.pop
-      else
-        @popped = true
-      end
+      arguments.pop if !popped?
     end
   end
 
   module Arguments
     def options
-      @options ||= Options.for(last.is_a?(Hash) ? last : {})
-    ensure
-      @options.arguments = self
+      @options ||=(
+        options = Options.for(last.is_a?(Hash) ? last : {})
+        options.arguments = self
+        options
+      )
     end
 
     class << Arguments
@@ -155,11 +150,8 @@ def Map.options_for!(*args, &block)
 end
 
 def Map.update_options_for!(args, &block)
-  options = Map.options_for!(args)
+  options = Map.options_for(args)
   block.call(options)
-ensure
-  args.push(options)
-  options.popped = false
 end
 
 class << Map

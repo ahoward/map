@@ -282,6 +282,10 @@ Testing Map do
       args = [0,1, {:k => :v, :a => false}]
       opts = assert{ Map.send(method, args) }
       assert{ !args.last.is_a?(Hash) }
+
+      new_args = [0,1, opts]
+      new_opts = assert{ Map.send(method, new_args) }
+      assert{ !new_args.last.is_a?(Hash) }
     end
   end
 
