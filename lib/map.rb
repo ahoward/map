@@ -1,5 +1,6 @@
+# -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '5.1.0' unless defined?(Version)
+  Version = '5.2.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -986,6 +987,16 @@ class Map < Hash
 #
   def extractable_options?
     true
+  end
+
+## for mongoid type system support
+#
+  def serialize(object)
+    ::Map.for(object)
+  end
+
+  def deserialize(object)
+    ::Map.for(object)
   end
 end
 

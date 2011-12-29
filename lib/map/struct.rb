@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 class Map
   class Struct
     instance_methods.each { |m| undef_method m unless m =~ /^__|object_id/ }

@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 # simple testing support
 #
   require 'test/unit'
