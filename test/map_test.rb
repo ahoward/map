@@ -271,6 +271,7 @@ Testing Map do
     %w( options_for options opts ).each do |method|
       args = [0,1, {:k => :v, :a => false}]
       opts = assert{ Map.send(method, args) }
+      assert{ opts.is_a?(Map) }
       assert{ opts.getopt(:k)==:v }
       assert{ opts.getopt(:a)==false }
       assert{ opts.getopt(:b, :default => 42)==42 }
@@ -282,10 +283,12 @@ Testing Map do
     %w( options_for! options! opts! ).each do |method|
       args = [0,1, {:k => :v, :a => false}]
       opts = assert{ Map.send(method, args) }
+      assert{ opts.is_a?(Map) }
       assert{ !args.last.is_a?(Hash) }
 
       new_args = [0,1, opts]
       new_opts = assert{ Map.send(method, new_args) }
+      assert{ new_opts.is_a?(Map) }
       assert{ !new_args.last.is_a?(Hash) }
     end
   end

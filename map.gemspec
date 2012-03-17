@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "5.2.0"
+  spec.version = "5.3.0"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "description: map kicks the ass"

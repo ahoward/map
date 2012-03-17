@@ -15,7 +15,11 @@ class Map
               raise(ArgumentError, arg.inspect) unless arg.respond_to?(:to_hash)
               arg.to_hash
           end
-        options.extend(Options) unless options.is_a?(Options)
+        unless options.is_a?(Options)
+          options = Map.for(options)
+          options.extend(Options)
+        end
+        raise unless options.is_a?(Map)
         options
       end
 
@@ -111,11 +115,14 @@ class Map
     end
 
     def popped?
-      arguments and arguments.last != self
+      @popped = false unless defined?(@popped)
+      arguments and arguments.last!=self and @popped
     end
 
     def pop!
-      arguments.pop if !popped?
+      arguments.pop unless popped?
+    ensure
+      @popped = true
     end
   end
 
