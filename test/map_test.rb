@@ -270,26 +270,38 @@ Testing Map do
   testing 'that map supports basic option parsing for methods' do
     %w( options_for options opts ).each do |method|
       args = [0,1, {:k => :v, :a => false}]
+      Map.send(method, args)
       opts = assert{ Map.send(method, args) }
       assert{ opts.is_a?(Map) }
       assert{ opts.getopt(:k)==:v }
       assert{ opts.getopt(:a)==false }
       assert{ opts.getopt(:b, :default => 42)==42 }
-      assert{ args.last.is_a?(Hash) }
+      assert{ args.last.object_id == opts.object_id }
     end
   end
 
   testing 'that bang option parsing can pop the options off' do
-    %w( options_for! options! opts! ).each do |method|
-      args = [0,1, {:k => :v, :a => false}]
+    logic = proc do |method, args|
+      before = args.dup
       opts = assert{ Map.send(method, args) }
-      assert{ opts.is_a?(Map) }
-      assert{ !args.last.is_a?(Hash) }
+      after = args
 
-      new_args = [0,1, opts]
-      new_opts = assert{ Map.send(method, new_args) }
-      assert{ new_opts.is_a?(Map) }
-      assert{ !new_args.last.is_a?(Hash) }
+      assert{ opts.is_a?(Map) }
+      assert{ !args.last.is_a?(Hash) } if before.last.is_a?(Hash)
+      assert{ args.last.object_id != opts.object_id }
+
+      opts
+    end
+
+    %w( options_for! options! opts! ).each do |method|
+      [
+        [0,1, {:k => :v, :a => false}],
+        [42],
+        []
+      ].each do |args|
+        opts = logic.call(method, args)
+        logic.call(method, [0, 1, opts])
+      end
     end
   end
 

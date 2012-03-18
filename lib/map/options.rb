@@ -15,11 +15,14 @@ class Map
               raise(ArgumentError, arg.inspect) unless arg.respond_to?(:to_hash)
               arg.to_hash
           end
+
         unless options.is_a?(Options)
           options = Map.for(options)
           options.extend(Options)
         end
+
         raise unless options.is_a?(Map)
+
         options
       end
 
@@ -39,6 +42,20 @@ class Map
     end
 
     attr_accessor :arguments
+
+    def pop
+      arguments.pop if arguments.last.object_id == object_id
+      self
+    end
+
+    def popped?
+      !(arguments.last.object_id == object_id)
+    end
+
+    def pop!
+      arguments.pop if arguments.last.object_id == object_id
+      self
+    end
 
     %w( to_options stringify_keys ).each do |method|
       module_eval <<-__, __FILE__, __LINE__
@@ -108,30 +125,21 @@ class Map
     end
     alias_method('setopts', 'set_opts')
     alias_method('setopts!', 'set_opts')
-
-    def pop
-      pop! unless popped?
-      self
-    end
-
-    def popped?
-      @popped = false unless defined?(@popped)
-      arguments and arguments.last!=self and @popped
-    end
-
-    def pop!
-      arguments.pop unless popped?
-    ensure
-      @popped = true
-    end
   end
 
   module Arguments
     def options
       @options ||=(
-        options = Options.for(last.is_a?(Hash) ? last : {})
-        options.arguments = self
-        options
+        if last.is_a?(Hash)
+          options = Options.for(pop)
+          options.arguments = self
+          push(options)
+          options
+        else
+          options = Options.for({})
+          options.arguments = self
+          options
+        end
       )
     end
 
