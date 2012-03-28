@@ -420,6 +420,14 @@ class Map < Hash
     self
   end
 
+  # See: https://github.com/rubinius/rubinius/blob/98c516820d9f78bd63f29dab7d5ec9bc8692064d/kernel/common/hash19.rb#L476-L484
+  def keep_if( &block )
+    raise RuntimeError.new( "can't modify frozen #{ self.class.name }" ) if frozen?
+    return to_enum( :keep_if ) unless block_given?
+    each { | key , val | delete key unless yield( key , val ) }
+    self
+  end
+
   def replace(*args)
     clear
     update(*args)

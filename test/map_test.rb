@@ -634,6 +634,41 @@ Testing Map do
     end
   end
 
+## Map#keep_if tests
+#
+# See: https://github.com/rubyspec/rubyspec/blob/ebd1ea400cb06807dbd6aa481c6c3d7a0b8fc7b4/core/hash/keep_if_spec.rb
+#
+  # original failing test
+  testing 'that Map#keep_if properly removes k/v pairs for which the passed block evaluates to false' do
+    m = Map.new( { 1 => "hi" , 2 => "there" } )
+    assert{ !( m.keep_if { |k,v| k == 2 }.keys.include? 1 ) }
+  end
+
+  testing 'yields two arguments: key and value' do
+    all_args = []
+    m = Map.new( { 1 => 2 , 3 => 4 } )
+    m.keep_if { |*args| all_args << args }
+    assert{ all_args == [[1, 2], [3, 4]] }
+  end
+
+  testing 'keeps every entry for which block is true and returns self' do
+    m = Map.new( { :a => 1 , :b => 2 , :c => 3 , :d => 4 } )
+    assert{ m.keep_if { |k,v| v % 2 == 0 }.object_id == m.object_id }
+    assert{ m == Map.new( { :b => 2 , :d => 4 } ) }
+  end
+
+  testing 'it raises a RuntimeError if called on a frozen instance' do
+    m = Map.new( { :a => 1 } ).freeze
+
+    assert do
+      begin
+        m.keep_if { |*_| false }
+      rescue Object => e
+        e.is_a?( RuntimeError )
+      end
+    end
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
