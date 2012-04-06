@@ -353,22 +353,6 @@ Testing Map do
     assert{ m[:x][:y][:z] == 42.0 }
   end
 
-  testing 'that maps can support compound key/val setting via key.dot notation' do
-    m = Class.new(Map){ dot_keys! }.new
-    assert{ m.set('a.b.c', 42) }
-    assert{ m[:a][:b][:c] == 42 }
-    assert{ m.get('a.b.c') == 42 }
-    assert{ m.set('x.y.z' => 42.0, 'A.2' => 'forty-two') }
-    assert{ m[:A].is_a?(Array) }
-    assert{ m[:A].size == 3}
-    assert{ m[:A][2] == 'forty-two' }
-    assert{ m[:x][:y].is_a?(Hash) }
-    assert{ m[:x][:y][:z] == 42.0 }
-    assert{ m.has?('a.b.c') }
-    assert{ m.has?('x.y.z') }
-    assert{ m.has?('A.2') }
-  end
-
   testing 'that Map#get supports providing a default value in a block' do
     m = Map.new
     m.set(:a, :b, :c, 42)

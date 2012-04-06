@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '5.5.0' unless defined?(Version)
+  Version = '5.6.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -841,49 +841,12 @@ class Map < Hash
     Map.alphanumeric_key_for(key)
   end
 
-## key path support
-#
-  def self.dot_key_for(*keys)
-    dot = keys.compact.flatten.join('.')
-    dot.split(%r/\s*[,.]\s*/).map{|part| part =~ %r/^\d+$/ ? Integer(part) : part}
-  end
-
-  def self.dot_keys
-    @@dot_keys = {} unless defined?(@@dot_keys)
-    @@dot_keys
-  end
-
-  def self.dot_keys?
-    ancestors.each do |ancestor|
-      return dot_keys[ancestor] if dot_keys.has_key?(ancestor)
-    end
-    false
-  end
-
-  def dot_keys?
-    @dot_keys = false unless defined?(@dot_keys)
-    @dot_keys
-  end
-
-  def self.dot_keys!(boolean = true)
-    dot_keys[self] = !!boolean
-  end
-
-  def dot_keys!(boolean = true)
-    @dot_keys = !!boolean
-  end
-
   def self.key_for(*keys)
-    return keys.flatten unless dot_keys?
-    self.dot_key_for(*keys)
+    return keys.flatten
   end
 
   def key_for(*keys)
-    if dot_keys?
-      self.class.dot_key_for(*keys)
-    else
-      self.class.key_for(*keys)
-    end
+    self.class.key_for(*keys)
   end
 
 ## TODO - technically this returns only leaves so the name isn't *quite* right.  re-factor for 3.0
