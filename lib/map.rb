@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '5.6.0' unless defined?(Version)
+  Version = '5.6.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -721,8 +721,7 @@ class Map < Hash
       when Hash
         collection.has_key?(key)
       when Array
-        return false unless key
-        (0...collection.size).include?(Integer(key))
+        (0...collection.size).include?((Integer(key) rescue -1))
     end
   end
 
@@ -736,45 +735,70 @@ class Map < Hash
       spec[keys] = value
     end
 
-    spec.each do |keys, value|
-      keys = Array(keys).flatten
+    begin
+      spec.each do |keys, value|
+        keys = Array(keys).flatten
+        collection = self
+        key = keys.pop
 
-      collection = self
-
-      keys = key_for(keys)
-
-      if keys.size <= 1
-        key = keys.first
-        collection[key] = value
-        next
-      end
-
-      key = nil
-
-      keys.each_cons(2) do |a, b|
-        a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
-
-        exists = collection_has_key?(collection, a)
-
-        case b
-          when Numeric
-            #collection[a] ||= []
-            collection[a] = [] unless exists
-            raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Array)
-
-          when String, Symbol
-            #collection[a] ||= {}
-            collection[a] = {} unless exists
-            raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }]=#{ value.inspect }") unless collection[a].is_a?(Hash)
+        while((k = keys.shift)) do
+          k = alphanumeric_key_for(k)
+          collection = collection[k]
         end
-        collection = collection[a]
-        key = b
-      end
 
-      collection[key] = value
+        collection[key] = value
+      end
+    rescue
+      spec.each do |keys, value|
+        keys = Array(keys).flatten
+
+        collection = self
+
+        if keys.size <= 1
+          key = keys.first
+          collection[key] = value
+          next
+        end
+
+        leaf_for(keys, :autovivify => true) do |leaf, key|
+          leaf[key] = value
+        end
+      end
     end
 
     return spec.values
+  end
+
+  def leaf_for(keys, options = {}, &block)
+    collection = self
+    key = nil
+
+    keys.each_cons(2) do |a, b|
+      a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
+
+      exists = collection_has_key?(collection, a)
+
+      case b
+        when Numeric
+          if options[:autovivify]
+            collection[a] = [] unless exists
+          end
+          raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }][#{ b.inspect }]") unless collection[a].is_a?(Array)
+
+        when String, Symbol
+          if options[:autovivify]
+            collection[a] = Map.new unless exists
+          end
+          raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }][#{ b.inspect }]") unless collection[a].is_a?(Map)
+      end
+
+      collection = collection[a]
+      key = b
+    end
+
+    leaf = collection
+
+    block ? block.call(leaf, key) : [leaf, key]
   end
 
   def rm(*args)

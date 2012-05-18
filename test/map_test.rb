@@ -349,7 +349,7 @@ Testing Map do
     assert{ m[:A].is_a?(Array) }
     assert{ m[:A].size == 3}
     assert{ m[:A][2] == 'forty-two' }
-    assert{ m[:x][:y].is_a?(Hash) }
+    assert{ m[:x][:y].is_a?(Map) }
     assert{ m[:x][:y][:z] == 42.0 }
   end
 
@@ -386,6 +386,11 @@ Testing Map do
     assert{ m.apply(defaults) }
     assert{ m[:array] == [0,1,2] }
     assert{ m[:hash] =~ {:a => false, :b => true, :c => 42} }
+
+    m = Map.new
+    assert{ m.apply :key => [{:key => :val}] }
+    assert{ m[:key].is_a?(Array) }
+    assert{ m[:key][0].is_a?(Map) }
   end
 
   testing 'that maps support depth_first_each' do
