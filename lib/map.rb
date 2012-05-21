@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '5.6.1' unless defined?(Version)
+  Version = '5.7.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -726,79 +726,162 @@ class Map < Hash
   end
 
   def set(*args)
-    if args.size == 1 and args.first.is_a?(Hash)
-      spec = args.shift
-    else
-      spec = {}
-      value = args.pop
-      keys = args
-      spec[keys] = value
+    case
+      when args.empty?
+        return []
+      when args.size == 1 && args.first.is_a?(Hash)
+        hash = args.shift
+      else
+        hash = {}
+        value = args.pop
+        key = Array(args).flatten
+        hash[key] = value
     end
 
-    begin
-      spec.each do |keys, value|
-        keys = Array(keys).flatten
-        collection = self
-        key = keys.pop
+    strategy = hash.map{|key, value| [Array(key), value]}
 
-        while((k = keys.shift)) do
-          k = alphanumeric_key_for(k)
-          collection = collection[k]
-        end
-
-        collection[key] = value
-      end
-    rescue
-      spec.each do |keys, value|
-        keys = Array(keys).flatten
-
-        collection = self
-
-        if keys.size <= 1
-          key = keys.first
-          collection[key] = value
-          next
-        end
-
-        leaf_for(keys, :autovivify => true) do |leaf, key|
-          leaf[key] = value
-        end
+    strategy.each do |key, value|
+      leaf_for(key, :autovivify => true) do |leaf, k|
+        leaf[k] = value
       end
     end
 
-    return spec.values
+    self
   end
 
-  def leaf_for(keys, options = {}, &block)
-    collection = self
-    key = nil
+  def add(*args)
+    case
+      when args.empty?
+        return []
+      when args.size == 1 && args.first.is_a?(Hash)
+        hash = args.shift
+      else
+        hash = {}
+        value = args.pop
+        key = Array(args).flatten
+        hash[key] = value
+    end
 
-    keys.each_cons(2) do |a, b|
+    exploded = Map.explode(hash)
+
+    exploded[:branches].each do |key, type|
+      set(key, type.new) unless get(key).is_a?(type)
+    end
+
+    exploded[:leaves].each do |key, value|
+      set(key, value)
+    end
+
+    self
+  end
+
+  def Map.explode(hash)
+    accum = {:branches => [], :leaves => []}
+
+    hash.each do |key, value|
+      Map._explode(key, value, accum)
+    end
+
+    branches = accum[:branches]
+    leaves = accum[:leaves]
+
+    sort_by_key_size = proc{|a,b| a.first.size <=> b.first.size}
+
+    branches.sort!(&sort_by_key_size)
+    leaves.sort!(&sort_by_key_size)
+
+    accum
+  end
+
+  def Map._explode(key, value, accum = {:branches => [], :leaves => []})
+    key = Array(key).flatten
+
+    case value
+      when Array
+        accum[:branches].push([key, Array])
+
+        value.each_with_index do |v, k|
+          Map._explode(key + [k], v, accum)
+        end
+
+      when Hash
+        accum[:branches].push([key, Map])
+
+        value.each do |k, v|
+          Map._explode(key + [k], v, accum)
+        end
+
+      else
+        accum[:leaves].push([key, value])
+    end
+
+    accum
+  end
+
+  def Map.add(*args)
+    args.flatten!
+    args.compact!
+
+    Map.for(args.shift).tap do |map|
+      args.each{|arg| map.add(arg)}
+    end
+  end
+
+  def Map.combine(*args)
+    Map.add(*args)
+  end
+
+  def combine!(*args, &block)
+    add(*args, &block)
+  end
+
+  def combine(*args, &block)
+    dup.tap do |map|
+      map.combine!(*args, &block)
+    end
+  end
+
+  def leaf_for(key, options = {}, &block)
+    leaf = self
+    key = Array(key).flatten
+    k = alphanumeric_key_for(key.first)
+
+    key.each_cons(2) do |a, b|
       a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
 
-      exists = collection_has_key?(collection, a)
+      exists = collection_has_key?(leaf, a)
 
       case b
         when Numeric
           if options[:autovivify]
-            collection[a] = [] unless exists
+            leaf[a] = [] unless exists
           end
-          raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }][#{ b.inspect }]") unless collection[a].is_a?(Array)
+
+          case
+            when Array, Hash
+              nil
+            else
+              raise(IndexError, "(#{ leaf.inspect })[#{ a.inspect }][#{ b.inspect }]")
+          end
 
         when String, Symbol
           if options[:autovivify]
-            collection[a] = Map.new unless exists
+            leaf[a] = Map.new unless exists
           end
-          raise(IndexError, "(#{ collection.inspect })[#{ a.inspect }][#{ b.inspect }]") unless collection[a].is_a?(Map)
+
+          case
+            when Hash
+              nil
+            else
+              raise(IndexError, "(#{ leaf.inspect })[#{ a.inspect }][#{ b.inspect }]")
+          end
       end
 
-      collection = collection[a]
-      key = b
+      leaf = leaf[a]
+      k = b
     end
 
-    leaf = collection
-
-    block ? block.call(leaf, key) : [leaf, key]
+    block ? block.call(leaf, k) : [leaf, k]
   end
 
   def rm(*args)

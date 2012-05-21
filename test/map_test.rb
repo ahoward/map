@@ -343,14 +343,26 @@ Testing Map do
   testing 'that maps support compound key/val setting' do
     m = Map.new
     assert{ m.set(:a, :b, :c, 42) }
-    assert{ m[:a][:b][:c] == 42 }
     assert{ m.get(:a, :b, :c) == 42 }
+
+    m = Map.new
+    assert{ m.set([:a, :b, :c], 42) }
+    assert{ m.get(:a, :b, :c) == 42 }
+
+    m = Map.new
+    assert{ m.set([:a, :b, :c] => 42) }
+    assert{ m.get(:a, :b, :c) == 42 }
+
+    m = Map.new
     assert{ m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two') }
     assert{ m[:A].is_a?(Array) }
     assert{ m[:A].size == 3}
     assert{ m[:A][2] == 'forty-two' }
     assert{ m[:x][:y].is_a?(Map) }
     assert{ m[:x][:y][:z] == 42.0 }
+
+    assert{ Map.new.tap{|m| m.set} =~ {} }
+    assert{ Map.new.tap{|m| m.set({})} =~ {} }
   end
 
   testing 'that Map#get supports providing a default value in a block' do
@@ -391,6 +403,63 @@ Testing Map do
     assert{ m.apply :key => [{:key => :val}] }
     assert{ m[:key].is_a?(Array) }
     assert{ m[:key][0].is_a?(Map) }
+  end
+
+  testing 'that #add overlays the leaves of one hash onto another without nuking branches' do
+    m = Map.new
+
+    assert do
+      m.add(
+        :comments => [
+          { :body => 'a' },
+          { :body => 'b' },
+        ],
+
+        [:comments, 0] => {'title' => 'teh title', 'description' => 'description'},
+        [:comments, 1] => {'description' => 'description'},
+      )
+    end
+
+    assert do
+      m =~
+        {"comments"=>
+          [{"body"=>"a", "title"=>"teh title", "description"=>"description"},
+             {"body"=>"b", "description"=>"description"}]}
+    end
+
+    m = Map.new
+
+    assert do
+      m.add(
+        [:a, :b, :c] => 42,
+
+        [:a, :b] => {:d => 42.0}
+      )
+    end
+
+    assert do
+      m =~
+        {"a"=>{"b"=>{"c"=>42, "d"=>42.0}}}
+    end
+
+    assert{ Map.new.tap{|m| m.add} =~ {} }
+    assert{ Map.new.tap{|m| m.add({})} =~ {} }
+  end
+
+  testing 'that Map.combine is teh sweet' do
+    {
+      [{:a => {:b => 42}}, {:a => {:c => 42.0}}] =>
+        {"a"=>{"b"=>42, "c"=>42.0}},
+
+      [{:a => {:b => 42}}, {:a => {:c => 42.0, :d => [1]}}] =>
+        {"a"=>{"b"=>42, "d"=>[1], "c"=>42.0}},
+
+      [{:a => {:b => 42}}, {:a => {:c => 42.0, :d => {0=>1}}}] =>
+        {"a"=>{"b"=>42, "d"=>{0=>1}, "c"=>42.0}}
+
+    }.each do |args, expected|
+      assert{ Map.combine(*args) =~ expected }
+    end
   end
 
   testing 'that maps support depth_first_each' do
