@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '5.8.0' unless defined?(Version)
+  Version = '6.0.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -648,6 +648,7 @@ class Map < Hash
 #
   def get(*keys)
     keys = key_for(keys)
+
     if keys.size <= 1
       if !self.has_key?(keys.first) && block_given?
         return yield
@@ -655,50 +656,51 @@ class Map < Hash
         return self[keys.first]
       end
     end
+
     keys, key = keys[0..-2], keys[-1]
     collection = self
+
     keys.each do |k|
-      k = alphanumeric_key_for(k)
-      if collection_has_key?(collection, k)
-        collection = collection[k]
+      if Map.collection_has?(collection, k)
+        collection = Map.collection_key(collection, k)
       else
         collection = nil
       end
+
       unless collection.respond_to?('[]')
         leaf = collection
         return leaf
       end
     end
-    alphanumeric_key = alphanumeric_key_for(key)
 
-    if !collection_has_key?(collection, alphanumeric_key) && block_given?
-      yield
+    if !Map.collection_has?(collection, key) && block_given?
+      default_value = yield
     else
-      collection[alphanumeric_key]
+      Map.collection_key(collection, key)
     end
   end
 
   def has?(*keys)
     keys = key_for(keys)
     collection = self
-    return collection_has_key?(collection, keys.first) if keys.size <= 1
+
+    return Map.collection_has?(collection, keys.first) if keys.size <= 1
+
     keys, key = keys[0..-2], keys[-1]
+
     keys.each do |k|
-      k = alphanumeric_key_for(k)
-      if collection_has_key?(collection, k)
-        collection = collection[k]
+      if Map.collection_has?(collection, k)
+        collection = Map.collection_key(collection, k)
       else
         collection = nil
       end
+
       return collection unless collection.respond_to?('[]')
     end
-    return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
-    collection_has_key?(collection, alphanumeric_key_for(key))
-  end
 
-  def blank?(*keys)
-    return empty? if keys.empty?
-    !has?(*keys) or Map.blank?(get(*keys))
+    return false unless(collection.is_a?(Hash) or collection.is_a?(Array))
+
+    Map.collection_has?(collection, key)
   end
 
   def Map.blank?(value)
@@ -716,13 +718,73 @@ class Map < Hash
     end
   end
 
-  def collection_has_key?(collection, key)
+  def blank?(*keys)
+    return empty? if keys.empty?
+    !has?(*keys) or Map.blank?(get(*keys))
+  end
+
+  def Map.collection_key(collection, key, &block)
     case collection
-      when Hash
-        collection.has_key?(key)
       when Array
-        (0...collection.size).include?((Integer(key) rescue -1))
+        begin
+          key = Integer(key)
+        rescue
+          raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]")
+        end
     end
+
+    collection[key]
+  end
+
+  def collection_key(*args, &block)
+    Map.collection_key(*args, &block)
+  end
+
+  def Map.collection_has?(collection, key, &block)
+    has_key =
+      case collection
+        when Array
+          key = (Integer(key) rescue -1)
+          (0...collection.size).include?(key)
+
+        else
+          collection.has_key?(key)
+      end
+
+    block.call(key) if(has_key and block)
+
+    has_key
+  end
+
+  def collection_has?(*args, &block)
+    Map.collection_has?(*args, &block)
+  end
+
+  def Map.collection_set(collection, key, value, &block)
+    set_key = false
+
+    case collection
+      when Array
+        begin
+          key = Integer(key)
+        rescue
+          raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]=#{ value.inspect }")
+        end
+        set_key = true
+        collection[key] = value
+
+      else
+        set_key = true
+        collection[key] = value
+    end
+
+    block.call(key) if(set_key and block)
+
+    [key, value]
+  end
+
+  def collection_set(*args, &block)
+    Map.collection_set(*args, &block)
   end
 
   def set(*args)
@@ -742,7 +804,7 @@ class Map < Hash
 
     strategy.each do |key, value|
       leaf_for(key, :autovivify => true) do |leaf, k|
-        leaf[k] = value
+        Map.collection_set(leaf, k, value)
       end
     end
 
@@ -844,40 +906,24 @@ class Map < Hash
   def leaf_for(key, options = {}, &block)
     leaf = self
     key = Array(key).flatten
-    k = alphanumeric_key_for(key.first)
+    k = key.first
 
     key.each_cons(2) do |a, b|
-      a, b = alphanumeric_key_for(a), alphanumeric_key_for(b)
-
-      exists = collection_has_key?(leaf, a)
+      exists = Map.collection_has?(leaf, a)
 
       case b
         when Numeric
           if options[:autovivify]
-            leaf[a] = [] unless exists
-          end
-
-          case
-            when Array, Hash
-              nil
-            else
-              raise(IndexError, "(#{ leaf.inspect })[#{ a.inspect }][#{ b.inspect }]")
+            Map.collection_set(leaf, a, Array.new) unless exists
           end
 
         when String, Symbol
           if options[:autovivify]
-            leaf[a] = Map.new unless exists
-          end
-
-          case
-            when Hash
-              nil
-            else
-              raise(IndexError, "(#{ leaf.inspect })[#{ a.inspect }][#{ b.inspect }]")
+            Map.collection_set(leaf, a, Map.new) unless exists
           end
       end
 
-      leaf = leaf[a]
+      leaf = Map.collection_key(leaf, a)
       k = b
     end
 
@@ -940,8 +986,11 @@ class Map < Hash
   end
 
   def Map.alphanumeric_key_for(key)
-    return key if Numeric===key
-    key.to_s =~ %r/^\d+$/ ? Integer(key) : key
+    return key if key.is_a?(Numeric)
+
+    digity, stringy, digits = %r/^(~)?(\d+)$/iomx.match(key).to_a
+
+    digity ? stringy ? String(digits) : Integer(digits) : key
   end
 
   def alphanumeric_key_for(key)
