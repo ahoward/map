@@ -731,9 +731,14 @@ class Map < Hash
         rescue
           raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]")
         end
-    end
+        collection[key]
 
-    collection[key]
+      when Hash
+        collection[key]
+
+      else
+        raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]")
+    end
   end
 
   def collection_key(*args, &block)
@@ -747,8 +752,11 @@ class Map < Hash
           key = (Integer(key) rescue -1)
           (0...collection.size).include?(key)
 
-        else
+        when Hash
           collection.has_key?(key)
+
+        else
+          raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]")
       end
 
     block.call(key) if(has_key and block)
@@ -773,9 +781,12 @@ class Map < Hash
         set_key = true
         collection[key] = value
 
-      else
+      when Hash
         set_key = true
         collection[key] = value
+
+      else
+        raise(IndexError, "(#{ collection.inspect })[#{ key.inspect }]=#{ value.inspect }")
     end
 
     block.call(key) if(set_key and block)
