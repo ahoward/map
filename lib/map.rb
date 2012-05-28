@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.0.0' unless defined?(Version)
+  Version = '6.0.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
