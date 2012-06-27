@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.0.1' unless defined?(Version)
+  Version = '6.1.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -1135,6 +1135,18 @@ class Map < Hash
 
   def deserialize(object)
     ::Map.for(object)
+  end
+
+  def Map.demongoize(object)
+    Map.for(object)
+  end
+
+  def Map.evolve(object)
+    Map.for(object)
+  end
+
+  def mongoize
+    self
   end
 end
 
