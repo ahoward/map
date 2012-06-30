@@ -727,6 +727,14 @@ Testing Map do
     end
   end
 
+  testing 'that Array-y values preserve their class' do
+    map = Map.new
+    list = Class.new(Array){}.new
+    map.list = list
+    assert{ map.list.class == list.class }
+    assert{ map.list.class != Array }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

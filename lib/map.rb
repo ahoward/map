@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.1.0' unless defined?(Version)
+  Version = '6.2.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -262,7 +262,7 @@ class Map < Hash
       when Hash
         coerce(value)
       when Array
-        value.map{|v| convert_value(v)}
+        value.map!{|v| convert_value(v)}
       else
         value
     end
