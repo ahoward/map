@@ -104,7 +104,6 @@ class Map < Hash
   #
     def each_pair(*args, &block)
       size = args.size
-      parity = size % 2 == 0 ? :even : :odd
       first = args.first
 
       if block.nil?
@@ -145,8 +144,8 @@ class Map < Hash
 
       if array_of_pairs
         args.each do |pair|
-          key, val, *ignored = pair
-          block.call(key, val)
+          k, v = pair[0..1]
+          block.call(k, v)
         end
       else
         0.step(args.size - 1, 2) do |a|
@@ -674,7 +673,7 @@ class Map < Hash
     end
 
     if !Map.collection_has?(collection, key) && block_given?
-      default_value = yield
+      yield #default_value
     else
       Map.collection_key(collection, key)
     end
@@ -811,11 +810,11 @@ class Map < Hash
         hash[key] = value
     end
 
-    strategy = hash.map{|key, value| [Array(key), value]}
+    strategy = hash.map{|skey, svalue| [Array(skey), svalue]}
 
-    strategy.each do |key, value|
-      leaf_for(key, :autovivify => true) do |leaf, k|
-        Map.collection_set(leaf, k, value)
+    strategy.each do |skey, svalue|
+      leaf_for(skey, :autovivify => true) do |leaf, k|
+        Map.collection_set(leaf, k, svalue)
       end
     end
 
@@ -837,12 +836,12 @@ class Map < Hash
 
     exploded = Map.explode(hash)
 
-    exploded[:branches].each do |key, type|
-      set(key, type.new) unless get(key).is_a?(type)
+    exploded[:branches].each do |bkey, btype|
+      set(bkey, btype.new) unless get(bkey).is_a?(btype)
     end
 
-    exploded[:leaves].each do |key, value|
-      set(key, value)
+    exploded[:leaves].each do |lkey, lvalue|
+      set(lkey, lvalue)
     end
 
     self
@@ -945,13 +944,13 @@ class Map < Hash
     paths, path = args.partition{|arg| arg.is_a?(Array)}
     paths.push(path)
 
-    paths.each do |path|
-      if path.size == 1
-        delete(*path)
+    paths.each do |p|
+      if p.size == 1
+        delete(*p)
         next
       end
 
-      branch, leaf = path[0..-2], path[-1]
+      branch, leaf = p[0..-2], p[-1]
       collection = get(branch)
 
       case collection
@@ -962,7 +961,7 @@ class Map < Hash
           index = leaf
           collection.delete_at(index)
         else
-          raise(IndexError, "(#{ collection.inspect }).rm(#{ path.inspect })")
+          raise(IndexError, "(#{ collection.inspect }).rm(#{ p.inspect })")
       end
     end
     paths
@@ -1099,19 +1098,19 @@ class Map < Hash
   end
 
   def depth_first_each(*args, &block)
-    Map.depth_first_each(enumerable=self, *args, &block)
+    Map.depth_first_each(self, *args, &block)
   end
 
   def depth_first_keys(*args, &block)
-    Map.depth_first_keys(enumerable=self, *args, &block)
+    Map.depth_first_keys(self, *args, &block)
   end
 
   def depth_first_values(*args, &block)
-    Map.depth_first_values(enumerable=self, *args, &block)
+    Map.depth_first_values(self, *args, &block)
   end
 
   def breadth_first_each(*args, &block)
-    Map.breadth_first_each(enumerable=self, *args, &block)
+    Map.breadth_first_each(self, *args, &block)
   end
 
   def contains(other)

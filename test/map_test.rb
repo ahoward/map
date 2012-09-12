@@ -361,8 +361,8 @@ Testing Map do
     assert{ m[:x][:y].is_a?(Map) }
     assert{ m[:x][:y][:z] == 42.0 }
 
-    assert{ Map.new.tap{|m| m.set} =~ {} }
-    assert{ Map.new.tap{|m| m.set({})} =~ {} }
+    assert{ Map.new.tap{|nm| nm.set} =~ {} }
+    assert{ Map.new.tap{|nm| nm.set({})} =~ {} }
   end
 
   testing 'that Map#get supports providing a default value in a block' do
@@ -442,8 +442,8 @@ Testing Map do
         {"a"=>{"b"=>{"c"=>42, "d"=>42.0}}}
     end
 
-    assert{ Map.new.tap{|m| m.add} =~ {} }
-    assert{ Map.new.tap{|m| m.add({})} =~ {} }
+    assert{ Map.new.tap{|i| i.add} =~ {} }
+    assert{ Map.new.tap{|i| i.add({})} =~ {} }
   end
 
   testing 'that Map.combine is teh sweet' do
@@ -567,7 +567,6 @@ Testing Map do
 
   testing 'that maps with un-marshal-able objects can be copied' do
     open(__FILE__) do |f|
-      f
       m = Map.for(:f => f)
       assert{ m.copy }
       assert{ m.dup }
