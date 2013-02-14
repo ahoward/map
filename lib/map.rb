@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.2.0' unless defined?(Version)
+  Version = '6.3.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -347,6 +347,7 @@ class Map < Hash
   def merge(*args)
     copy.update(*args)
   end
+  alias_method '+', 'merge'
 
   def reverse_merge(hash)
     map = copy
