@@ -79,7 +79,7 @@ DESCRIPTION
   opts = Map.options(:a => 42, :b => nil, :c => false)
   opts.getopt(:a)                    #=> 42
   opts.getopt(:b)                    #=> nil
-  opts.getopt(:b, :default => 42)    #=> 42 
+  opts.getopt(:b, :default => 42)    #=> nil 
   opts.getopt(:c)                    #=> false
   opts.getopt(:d, :default => false) #=> false
 
