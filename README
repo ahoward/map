@@ -37,7 +37,7 @@ DESCRIPTION
   m[:c] = 2
 
   p m.keys #=> ['a','b','c']  ### always ordered!
-  p m.keys #=> [0,1,2]        ### always ordered!
+  p m.values #=> [0,1,2]      ### always ordered!
 
 # maps don't care about symbol vs.string keys
 #
