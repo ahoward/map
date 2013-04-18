@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.3.0"
+  spec.version = "6.4.0"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "description: map kicks the ass"
@@ -18,6 +18,7 @@ Gem::Specification::new do |spec|
  "lib/map/integrations",
  "lib/map/integrations/active_record.rb",
  "lib/map/options.rb",
+ "lib/map/params.rb",
  "lib/map/struct.rb",
  "map.gemspec",
  "test",

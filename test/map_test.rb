@@ -735,6 +735,21 @@ Testing Map do
     assert{ map.list.class != Array }
   end
 
+  testing 'rack compatible params' do
+    m = Map.for(:a => [{}, {:b => 42}], :x => [ nil, [ nil, {:y => 42}] ], :A => {:B => {:C => 42}})
+
+    assert{ m.param_for(:a, 1, :b) == 'map[a][][b]=42' }
+    assert{ m.name_for(:a, 1, :b) == 'map[a][][b]' }
+
+    assert{ m.param_for(:x, 1, 1, :y) == 'map[x][][][y]=42' }
+    assert{ m.name_for(:x, 1, 1, :y) == 'map[x][][][y]' }
+
+    assert{ m.param_for(:A, :B, :C) == 'map[A][B][C]=42' }
+    assert{ m.name_for(:A, :B, :C) == 'map[A][B][C]' }
+
+    assert{ m.name_for(:A, :B, :C, :prefix => :foo) == 'foo[A][B][C]' }
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }

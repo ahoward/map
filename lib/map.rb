@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.3.0' unless defined?(Version)
+  Version = '6.4.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -1160,3 +1160,4 @@ end
 
 Map.load('struct.rb')
 Map.load('options.rb')
+Map.load('params.rb')
