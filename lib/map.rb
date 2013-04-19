@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.4.0' unless defined?(Version)
+  Version = '6.4.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -168,6 +168,21 @@ class Map < Hash
 
     def match(haystack, needle)
       intersection(haystack, needle) == needle
+    end
+
+    def args_for_arity(args, arity)
+      arity = Integer(arity.respond_to?(:arity) ? arity.arity : arity)
+      arity < 0 ? args.dup : args.slice(0, arity)
+    end
+
+    def call(object, method, *args, &block)
+      args = Map.args_for_arity(args, object.method(method).arity)
+      object.send(method, *args, &block)
+    end
+
+    def bcall(*args, &block)
+      args = Map.args_for_arity(args, block.arity)
+      block.call(*args)
     end
   end
 
@@ -414,10 +429,16 @@ class Map < Hash
     super
   end
 
-  def delete_if
+  def delete_if(&block)
     to_delete = []
-    keys.each{|key| to_delete.push(key) if yield(key)}
+
+    each do |key, val|
+      args = [key, val]
+      to_delete.push(key) if !!Map.bcall(*args, &block)
+    end
+
     to_delete.each{|key| delete(key)}
+
     self
   end
 

@@ -750,6 +750,16 @@ Testing Map do
     assert{ m.name_for(:A, :B, :C, :prefix => :foo) == 'foo[A][B][C]' }
   end
 
+  testing 'delete_if' do
+    m = Map.for(:k => :v)
+    assert{ m.delete_if{|k| k.to_s == 'k'} }
+    assert{ m.empty?}
+
+    m = Map.for(:k => :v)
+    assert{ m.delete_if{|k,v| v.to_s == 'v'} }
+    assert{ m.empty?}
+  end
+
 protected
   def new_int_map(n = 1024)
     map = assert{ Map.new }
