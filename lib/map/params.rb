@@ -30,6 +30,16 @@ class Map
     param_for(*args, &block)
   end
 
+  def to_params
+    to_params = Array.new
+
+    depth_first_each do |key, val|
+      to_params.push(param_for(key))
+    end
+
+    to_params.join('&')
+  end
+
   module Param
     def param_for(value, prefix = nil)
       case value

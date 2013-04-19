@@ -748,6 +748,9 @@ Testing Map do
     assert{ m.name_for(:A, :B, :C) == 'map[A][B][C]' }
 
     assert{ m.name_for(:A, :B, :C, :prefix => :foo) == 'foo[A][B][C]' }
+
+    m = Map.for({"a"=>{"b"=>42}, "x"=>{"y"=>42}, "foo"=>:bar, "array"=>[{"k"=>:v}]})
+    assert{ m.to_params == "map[a][b]=42&map[x][y]=42&map[foo]=bar&map[array][][k]=v"  }
   end
 
   testing 'delete_if' do
