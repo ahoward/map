@@ -34,7 +34,6 @@
       end
 
       def self.testing(*args, &block)
-        method = ["test", testno, slug_for(*args)].delete_if{|part| part.empty?}.join('_')
         define_method("test_#{ testno }_#{ slug_for(*args) }", &block)
       end
 
@@ -69,7 +68,7 @@
         __assert_raises__(*args, &block)
       end
 
-      module_eval &block
+      module_eval(&block)
       self
     end
   end

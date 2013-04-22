@@ -43,7 +43,7 @@ class Map
   end
 
   def struct
-    @struct ||= Struct.new(map=self)
+    @struct ||= Struct.new(self)
   end
 
   def Map.struct(*args, &block)
