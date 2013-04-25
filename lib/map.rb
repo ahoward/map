@@ -578,11 +578,15 @@ class Map < Hash
   end
 
   conversion_methods.each do |method|
-    module_eval(<<-__, __FILE__, __LINE__)
-      def #{ method }
-        self
-      end
-    __
+    begin
+      instance_method(:to_map)
+    rescue NameError
+      module_eval(<<-__, __FILE__, __LINE__)
+        def #{ method }
+          self
+        end
+      __
+    end
   end
 
   def to_hash
@@ -1117,6 +1121,7 @@ class Map < Hash
 
   def Map.keys_for(enumerable)
     keys = enumerable.respond_to?(:keys) ? enumerable.keys : Array.new(enumerable.size){|i| i}
+    keys
   end
 
   def depth_first_each(*args, &block)
