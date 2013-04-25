@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.4.2' unless defined?(Version)
+  Version = '6.5.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -53,6 +53,12 @@ class Map < Hash
           other
         else
           allocate.update(other.to_hash)
+      end
+    end
+
+    def tap(*args, &block)
+      new(*args).tap do |map|
+        map.tap(&block) if block
       end
     end
 
