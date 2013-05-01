@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.5.0"
+  spec.version = "6.5.1"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "description: map kicks the ass"
@@ -12,6 +12,7 @@ Gem::Specification::new do |spec|
 ["LICENSE",
  "README",
  "Rakefile",
+ "a.rb",
  "lib",
  "lib/map",
  "lib/map.rb",
