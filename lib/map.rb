@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.5.0' unless defined?(Version)
+  Version = '6.5.1' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -250,14 +250,8 @@ class Map < Hash
     klass.map_for(hash)
   end
 
-=begin
-  def self.convert_key(key)
+  def Map.convert_key(key)
     key.kind_of?(Symbol) ? key.to_s : key
-  end
-=end
-
-  def self.convert_key(key)
-    key = key.kind_of?(Symbol) ? key.to_s : key
   end
 
   def convert_key(key)
@@ -472,11 +466,9 @@ class Map < Hash
 
   def unshift(*args)
     Map.each_pair(*args) do |key, val|
-      if key?(key)
-        delete(key)
-      else
-        keys.unshift(key)
-      end
+      key = convert_key(key)
+      delete(key)
+      keys.unshift(key)
       __set__(key, val)
     end
     self
@@ -484,11 +476,9 @@ class Map < Hash
 
   def push(*args)
     Map.each_pair(*args) do |key, val|
-      if key?(key)
-        delete(key)
-      else
-        keys.push(key)
-      end
+      key = convert_key(key)
+      delete(key)
+      keys.push(key)
       __set__(key, val)
     end
     self
