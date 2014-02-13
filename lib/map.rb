@@ -1,11 +1,15 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.5.1' unless defined?(Version)
+  Version = '6.5.2' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
     def version
       Map::Version
+    end
+
+    def description
+      "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
     end
 
     def libdir(*args, &block)
@@ -1182,3 +1186,4 @@ end
 Map.load('struct.rb')
 Map.load('options.rb')
 Map.load('params.rb')
+

@@ -3,15 +3,17 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.5.1"
+  spec.version = "6.5.2"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
-  spec.description = "description: map kicks the ass"
+  spec.description = "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
+  spec.license = "same as ruby's"
 
   spec.files =
 ["LICENSE",
  "README",
  "Rakefile",
+ "a",
  "a.rb",
  "lib",
  "lib/map",
