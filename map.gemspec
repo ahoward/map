@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.5.2"
+  spec.version = "6.5.3"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
@@ -13,7 +13,6 @@ Gem::Specification::new do |spec|
 ["LICENSE",
  "README",
  "Rakefile",
- "a",
  "a.rb",
  "lib",
  "lib/map",
@@ -36,8 +35,7 @@ Gem::Specification::new do |spec|
 
   spec.test_files = nil
 
-### spec.add_dependency 'lib', '>= version'
-#### spec.add_dependency 'map'
+  
 
   spec.extensions.push(*[])
 
