@@ -774,8 +774,8 @@ class Map < Hash
     has_key =
       case collection
         when Array
-          key = (Integer(key) rescue -1)
-          (0...collection.size).include?(key)
+          key = (Integer(key) rescue nil)
+          (0...collection.size).include?(key) or (0...collection.size).include?((-key)-1)
 
         when Hash
           collection.has_key?(key)

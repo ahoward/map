@@ -361,6 +361,10 @@ Testing Map do
     assert{ m[:x][:y].is_a?(Map) }
     assert{ m[:x][:y][:z] == 42.0 }
 
+    m = Map.new(a: [b: :c])
+    assert { m.get(:a, '-1', :b) == m.get(:a, '-1').get(:b) }
+    assert { m.get(:a, '-1', :b) == :c }
+
     assert{ Map.new.tap{|nm| nm.set} =~ {} }
     assert{ Map.new.tap{|nm| nm.set({})} =~ {} }
   end
