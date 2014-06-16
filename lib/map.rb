@@ -775,7 +775,12 @@ class Map < Hash
       case collection
         when Array
           key = (Integer(key) rescue nil)
-          (0...collection.size).include?(key) or (0...collection.size).include?((-key)-1)
+          begin
+            collection.fetch(key)
+            true
+          rescue
+            false
+          end
 
         when Hash
           collection.has_key?(key)
