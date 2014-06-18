@@ -365,6 +365,17 @@ Testing Map do
     assert{ Map.new.tap{|nm| nm.set({})} =~ {} }
   end
 
+  testing 'that maps support compound key/val getting, setting, and checking with negative array indexes' do
+    m = Map.new(a: [b: :c])
+    assert { m.get(:a, '-1', :b) == m.get(:a, '-1').get(:b) }
+    assert { m.get(:a, '-1', :b) == :c }
+
+    assert { m.set(:a, '-1', :b, :d) }
+    assert { m.get(:a, '-1', :b) == :d }
+
+    assert { m.has?(:a, '-1', :b) == true}
+  end
+
   testing 'that Map#get supports providing a default value in a block' do
     m = Map.new
     m.set(:a, :b, :c, 42)
