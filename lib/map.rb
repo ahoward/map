@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.5.3' unless defined?(Version)
+  Version = '6.5.4' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -775,12 +775,7 @@ class Map < Hash
       case collection
         when Array
           key = (Integer(key) rescue nil)
-          begin
-            collection.fetch(key)
-            true
-          rescue
-            false
-          end
+          !!collection.fetch(key) rescue false
 
         when Hash
           collection.has_key?(key)
