@@ -108,7 +108,7 @@ DESCRIPTION
 
   m = Map.new(:array => [0,1])
   defaults = {:array => [nil, nil, 2]}
-  m.apply!(defaults)
+  m.apply(defaults)
   p m[:array]            #=> [0,1,2]
 
 # they also support some different iteration styles
