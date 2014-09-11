@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.5.4"
+  spec.version = "6.5.5"
   spec.platform = Gem::Platform::RUBY
   spec.summary = "map"
   spec.description = "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
