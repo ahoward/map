@@ -1,6 +1,6 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.5.5' unless defined?(Version)
+  Version = '6.6.0' unless defined?(Version)
   Load = Kernel.method(:load) unless defined?(Load)
 
   class << Map
@@ -599,11 +599,8 @@ class Map < Hash
   end
   alias_method 'to_h', 'to_hash'
 
-  def to_yaml( opts = {} )
-    map = self
-    YAML.quick_emit(self.object_id, opts){|out|
-      out.map('!omap'){|m| map.each{|k,v| m.add(k, v)}}
-    }
+  def to_yaml(*args, &block)
+    to_hash.to_yaml(*args, &block)
   end
 
   def to_array
