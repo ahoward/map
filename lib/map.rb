@@ -82,7 +82,7 @@ class Map < Hash
 
     def define_conversion_method!(method)
       method = method.to_s.strip
-      raise ArguementError if method.empty?
+      raise ArgumentError if method.empty?
       module_eval(<<-__, __FILE__, __LINE__)
         unless public_method_defined?(#{ method.inspect })
           def #{ method }
@@ -98,7 +98,7 @@ class Map < Hash
     def add_conversion_method!(method)
       if define_conversion_method!(method)
         method = method.to_s.strip
-        raise ArguementError if method.empty?
+        raise ArgumentError if method.empty?
         module_eval(<<-__, __FILE__, __LINE__)
           unless conversion_methods.include?(#{ method.inspect })
             conversion_methods.unshift(#{ method.inspect })
