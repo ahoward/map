@@ -5,7 +5,7 @@ NAME
 
 LOGO
 ----
-  ![weed whacking giraffe]('./images/map.png')
+  ![weed whacking giraffe]('https://github.com/ahoward/map/blob/master/images/map.png')
 
 
 SYNOPSIS
