@@ -173,18 +173,6 @@ Testing Map do
     assert{ a != b}
   end
 
-  testing 'simple struct usage' do
-    a = assert{ Map.new(:k => :v) }
-    s = assert{ a.struct }
-    assert{ s.k == :v }
-  end
-
-  testing 'nested struct usage' do
-    a = assert{ Map.new(:k => {:l => :v}) }
-    s = assert{ a.struct }
-    assert{ s.k.l == :v }
-  end
-
   testing 'that subclassing and clobbering initialize does not kill nested coersion' do
     c = Class.new(Map){ def initialize(arg) end }
     o = assert{ c.new(42) }
@@ -250,7 +238,6 @@ Testing Map do
   end
 
   testing 'that coercion is minimal' do
-    map = Map.new
     a = Class.new(Map) do
       def to_map() {:k => :a} end
     end
@@ -284,7 +271,6 @@ Testing Map do
     logic = proc do |method, args|
       before = args.dup
       opts = assert{ Map.send(method, args) }
-      after = args
 
       assert{ opts.is_a?(Map) }
       assert{ !args.last.is_a?(Hash) } if before.last.is_a?(Hash)
@@ -503,7 +489,7 @@ Testing Map do
     each = []
     array = %w( a b c )
     Map.each_pair(array){|k,v| each.push(k,v)}
-    assert{ each_pair = ['a', 'b', 'c', nil] }
+    assert{ each == ['a', 'b', 'c', nil] }
   end
 
   testing 'that maps support breath_first_each' do
@@ -517,6 +503,7 @@ Testing Map do
 
     accum = []
     Map.breadth_first_each(map){|k, v| accum.push([k, v])}
+
     expected =
       [[["hash"], {"x"=>"y"}],
        [["nested hash"], {"nested"=>{"a"=>"b"}}],
@@ -535,6 +522,8 @@ Testing Map do
        [["nested array", 0, 0], 3],
        [["nested array", 1, 0], 4],
        [["nested array", 2, 0], 5]]
+
+    assert{ expected == accum }
   end
 
   testing 'that maps have a needle-in-a-haystack like #contains? method' do
@@ -666,30 +655,6 @@ Testing Map do
     assert( m.A? )
   end
 
-  testing 'that maps have a clever little question method on Struct' do
-    m = Map.new
-    m.set(:a, :b, :c, 42)
-    m.set([:x, :y, :z] => 42.0, [:A, 2] => 'forty-two')
-    s = m.struct
-
-    assert( s.a.b.c == 42   )
-    assert( s.x.y.z == 42.0 )
-
-    assert( !s.b? )
-    assert( s.a? )
-    assert( s.a.b? )
-    assert( s.a.b.c? )
-    assert( !s.a.b.d? )
-
-    assert( s.x? )
-    assert( s.x.y? )
-    assert( s.x.y.z? )
-    assert( !s.y? )
-
-    assert( s.A? )
-
-  end
-
   testing 'that Map#default= blows up until a sane strategy for dealing with it is developed' do
     m = Map.new
 
@@ -745,24 +710,6 @@ Testing Map do
     assert{ map.list.class != Array }
   end
 
-  testing 'rack compatible params' do
-    m = Map.for(:a => [{}, {:b => 42}], :x => [ nil, [ nil, {:y => 42}] ], :A => {:B => {:C => 42}})
-
-    assert{ m.param_for(:a, 1, :b) == 'map[a][][b]=42' }
-    assert{ m.name_for(:a, 1, :b) == 'map[a][][b]' }
-
-    assert{ m.param_for(:x, 1, 1, :y) == 'map[x][][][y]=42' }
-    assert{ m.name_for(:x, 1, 1, :y) == 'map[x][][][y]' }
-
-    assert{ m.param_for(:A, :B, :C) == 'map[A][B][C]=42' }
-    assert{ m.name_for(:A, :B, :C) == 'map[A][B][C]' }
-
-    assert{ m.name_for(:A, :B, :C, :prefix => :foo) == 'foo[A][B][C]' }
-
-    m = Map.for({"a"=>{"b"=>42}, "x"=>{"y"=>42}, "foo"=>:bar, "array"=>[{"k"=>:v}]})
-    assert{ m.to_params == "map[a][b]=42&map[x][y]=42&map[foo]=bar&map[array][][k]=v"  }
-  end
-
   testing 'delete_if' do
     m = Map.for(:k => :v)
     assert{ m.delete_if{|k| k.to_s == 'k'} }
@@ -771,6 +718,23 @@ Testing Map do
     m = Map.for(:k => :v)
     assert{ m.delete_if{|k,v| v.to_s == 'v'} }
     assert{ m.empty?}
+  end
+
+  testing 'deep fetch' do
+    m = Map.for(:a => {:b => {:c => :v}})
+
+    assert{ m.fetch(:a, :b, :c) == :v }
+  end
+
+  testing 'fetch mapifys' do
+    m = Map.new
+    h = {:key => :value, :hash => {:a => :b}, :array => [0, {:a => :b}]}
+
+    missing = assert{ m.fetch(:missing){ h } }
+    assert{ missing.is_a?(Map) }
+    assert{ missing[:hash].is_a?(Map) }
+    assert{ not missing[:array][0].is_a?(Map) }
+    assert{ missing[:array][1].is_a?(Map) }
   end
 
 protected

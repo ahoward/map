@@ -3,25 +3,26 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.6.0"
+  spec.version = "7.0.0"
+  spec.required_ruby_version = '>= 3.0'
   spec.platform = Gem::Platform::RUBY
-  spec.summary = "map"
-  spec.description = "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
-  spec.license = "same as ruby's"
+  spec.summary = "the perfect ruby data structure"
+  spec.description = "map.rb is a string/symbol indifferent ordered hash that works in all rubies.\n\nout of the over 200 ruby gems i have written, this is the one i use\nevery day, in all my projects.\n\nsome may be accustomed to using ActiveSupport::HashWithIndiffentAccess\nand, although there are some similarities, map.rb is more complete,\nworks without requiring a mountain of code, and has been in production\nusage for over 15 years.\n\nit has no dependencies, and suports a myriad of other, 'tree-ish'\noperators that will allow you to slice and dice data like a giraffee\nwith a giant weed whacker."
+  spec.license = "Ruby"
 
   spec.files =
 ["LICENSE",
  "README",
+ "README.md",
  "Rakefile",
- "a.rb",
+ "images",
+ "images/giraffe.jpeg",
+ "images/map.png",
  "lib",
  "lib/map",
  "lib/map.rb",
- "lib/map/integrations",
- "lib/map/integrations/active_record.rb",
+ "lib/map/_lib.rb",
  "lib/map/options.rb",
- "lib/map/params.rb",
- "lib/map/struct.rb",
  "map.gemspec",
  "test",
  "test/leak.rb",
@@ -33,13 +34,10 @@ Gem::Specification::new do |spec|
   
   spec.require_path = "lib"
 
-  spec.test_files = nil
-
   
 
   spec.extensions.push(*[])
 
-  spec.rubyforge_project = "codeforpeople"
   spec.author = "Ara T. Howard"
   spec.email = "ara.t.howard@gmail.com"
   spec.homepage = "https://github.com/ahoward/map"

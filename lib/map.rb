@@ -1,35 +1,8 @@
 # -*- encoding : utf-8 -*-
 class Map < Hash
-  Version = '6.6.0' unless defined?(Version)
-  Load = Kernel.method(:load) unless defined?(Load)
+  require_relative 'map/_lib.rb'
 
   class << Map
-    def version
-      Map::Version
-    end
-
-    def description
-      "the awesome ruby container you've always wanted: a string/symbol indifferent ordered hash that works in all rubies"
-    end
-
-    def libdir(*args, &block)
-      @libdir ||= File.expand_path(__FILE__).sub(/\.rb$/,'')
-      libdir = args.empty? ? @libdir : File.join(@libdir, *args.map{|arg| arg.to_s})
-    ensure
-      if block
-        begin
-          $LOAD_PATH.unshift(libdir) unless $LOAD_PATH.first==libdir
-          module_eval(&block)
-        ensure
-          $LOAD_PATH.shift() if $LOAD_PATH.first==libdir
-        end
-      end
-    end
-
-    def load(*args, &block)
-      libdir{ Load.call(*args, &block) }
-    end
-
     def allocate
       super.instance_eval do
         @keys = []
@@ -258,6 +231,17 @@ class Map < Hash
     key.kind_of?(Symbol) ? key.to_s : key
   end
 
+  def Map.mapify(object)
+    case
+      when object.is_a?(Array)
+        object.each{|it| Map.mapify(it)}
+      when object.is_a?(Hash)
+        Map.for(object)
+      else
+        object
+    end
+  end
+
   def convert_key(key)
     if klass.respond_to?(:convert_key)
       klass.convert_key(key)
@@ -344,9 +328,14 @@ class Map < Hash
     __get__(key)
   end
 
-  def fetch(key, *args, &block)
-    key = convert_key(key)
-    super(key, *args, &block)
+  def fetch(key, *keys, &block)
+    keys.unshift(key)
+
+    if has?(*keys)
+      get(*keys)
+    else
+      Map.mapify(yield)
+    end
   end
 
   def key?(key)
@@ -636,21 +625,26 @@ class Map < Hash
 # a sane method missing that only supports writing values or reading
 # *previously set* values
 #
-  def method_missing(*args, &block)
+  def method_missing(*args, **kws, &block)
     method = args.first.to_s
+
     case method
       when /=$/
         key = args.shift.to_s.chomp('=')
         value = args.shift
         self[key] = value
+
       when /\?$/
         key = args.shift.to_s.chomp('?')
         self.has?( key )
+
       else
         key = method
+
         unless has_key?(key)
           return(block ? fetch(key, &block) : super(*args))
         end
+
         self[key]
     end
   end
@@ -1181,7 +1175,4 @@ private
   end
 end
 
-Map.load('struct.rb')
-Map.load('options.rb')
-Map.load('params.rb')
-
+require_relative 'map/options.rb'

@@ -1,10 +1,11 @@
-This.rubyforge_project = 'codeforpeople'
 This.author = "Ara T. Howard"
 This.email = "ara.t.howard@gmail.com"
-This.homepage = "https://github.com/ahoward/#{ This.lib }"
+This.github = "ahoward"
+This.homepage = "https://github.com/#{ This.github }/#{ This.basename }"
+This.repo = "https://github.com/#{ This.github }/#{ This.basename }"
 
 task :license do
-  open('LICENSE', 'w'){|fd| fd.puts "same as ruby's"}
+  open('LICENSE', 'w'){|fd| fd.puts "Ruby"}
 end
 
 task :default do
@@ -72,11 +73,13 @@ task :gemspec do
         extension = File.basename(entry).split(%r/[.]/).last
         ignore_extensions.any?{|ext| ext === extension}
       end
+
       list.delete_if do |entry|
         next unless test(?d, entry)
         dirname = File.expand_path(entry)
         ignore_directories.any?{|dir| File.expand_path(dir) == dirname}
       end
+
       list.delete_if do |entry|
         next unless test(?f, entry)
         filename = File.expand_path(entry)
@@ -84,22 +87,20 @@ task :gemspec do
       end
     end
 
-  lib         = This.lib
+  name        = This.basename
   object      = This.object
   version     = This.version
   files       = shiteless[Dir::glob("**/**")]
   executables = shiteless[Dir::glob("bin/*")].map{|exe| File.basename(exe)}
-  #has_rdoc    = true #File.exist?('doc')
-  test_files  = "test/#{ lib }.rb" if File.file?("test/#{ lib }.rb")
-  summary     = object.respond_to?(:summary) ? object.summary : "summary: #{ lib } kicks the ass"
-  description = object.respond_to?(:description) ? object.description : "description: #{ lib } kicks the ass"
-  license     = object.respond_to?(:license) ? object.license : "same as ruby's"
+  summary     = Util.unindent(This.summary).strip
+  description = Util.unindent(This.description).strip
+  license     = This.license.strip
 
   if This.extensions.nil?
     This.extensions = []
     extensions = This.extensions
     %w( Makefile configure extconf.rb ).each do |ext|
-      extensions << ext if File.exists?(ext)
+      extensions << ext if File.exist?(ext)
     end
   end
   extensions = [extensions].flatten.compact
@@ -121,14 +122,15 @@ task :gemspec do
     else
       Template {
         <<-__
-          ## <%= lib %>.gemspec
+          ## <%= name %>.gemspec
           #
 
           Gem::Specification::new do |spec|
-            spec.name = <%= lib.inspect %>
+            spec.name = <%= name.inspect %>
             spec.version = <%= version.inspect %>
+            spec.required_ruby_version = '>= 3.0'
             spec.platform = Gem::Platform::RUBY
-            spec.summary = <%= lib.inspect %>
+            spec.summary = <%= summary.inspect %>
             spec.description = <%= description.inspect %>
             spec.license = <%= license.inspect %>
 
@@ -137,15 +139,12 @@ task :gemspec do
             
             spec.require_path = "lib"
 
-            spec.test_files = <%= test_files.inspect %>
-
             <% dependencies.each do |lib_version| %>
               spec.add_dependency(*<%= Array(lib_version).flatten.inspect %>)
             <% end %>
 
             spec.extensions.push(*<%= extensions.inspect %>)
 
-            spec.rubyforge_project = <%= This.rubyforge_project.inspect %>
             spec.author = <%= This.author.inspect %>
             spec.email = <%= This.email.inspect %>
             spec.homepage = <%= This.homepage.inspect %>
@@ -155,7 +154,7 @@ task :gemspec do
     end
 
   Fu.mkdir_p(This.pkgdir)
-  gemspec = "#{ lib }.gemspec"
+  gemspec = "#{ name }.gemspec"
   open(gemspec, "w"){|fd| fd.puts(template)}
   This.gemspec = gemspec
 end
@@ -171,28 +170,49 @@ task :gem => [:clean, :gemspec] do
   This.gem = File.join(This.pkgdir, File.basename(gem))
 end
 
+task :README => [:readme]
+
 task :readme do
   samples = ''
   prompt = '~ > '
   lib = This.lib
   version = This.version
 
-  Dir['sample*/*'].sort.each do |sample|
-    samples << "\n" << "  <========< #{ sample } >========>" << "\n\n"
+  Dir['sample*/**/**.rb'].sort.each do |sample|
+    link = "[#{ sample }](#{ This.repo }/blob/main/#{ sample })"
+    samples << "  #### <========< #{ link } >========>\n"
 
     cmd = "cat #{ sample }"
-    samples << Util.indent(prompt + cmd, 2) << "\n\n"
-    samples << Util.indent(`#{ cmd }`, 4) << "\n"
+    samples << "```sh\n"
+    samples << Util.indent(prompt + cmd, 2) << "\n"
+    samples << "```\n"
+    samples << "```ruby\n"
+    samples << Util.indent(IO.binread(sample), 4) << "\n"
+    samples << "```\n"
+
+    samples << "\n"
 
     cmd = "ruby #{ sample }"
-    samples << Util.indent(prompt + cmd, 2) << "\n\n"
+    samples << "```sh\n"
+    samples << Util.indent(prompt + cmd, 2) << "\n"
+    samples << "```\n"
 
     cmd = "ruby -e'STDOUT.sync=true; exec %(ruby -I ./lib #{ sample })'"
-    samples << Util.indent(`#{ cmd } 2>&1`, 4) << "\n"
+    oe = `#{ cmd } 2>&1`
+    samples << "```txt\n"
+    samples << Util.indent(oe, 4) << "\n"
+    samples << "```\n"
+
+    samples << "\n"
   end
 
+  This.samples = samples
+
   template = 
-    if test(?e, 'README.erb')
+    case
+    when test(?e, 'README.md.erb')
+      Template{ IO.read('README.md.erb') }
+    when test(?e, 'README.erb')
       Template{ IO.read('README.erb') }
     else
       Template {
@@ -211,27 +231,19 @@ task :readme do
       }
     end
 
-  open("README", "w"){|fd| fd.puts template}
+  IO.binwrite('README.md', template)
 end
-
 
 task :clean do
   Dir[File.join(This.pkgdir, '**/**')].each{|entry| Fu.rm_rf(entry)}
 end
 
-
-task :release => [:clean, :gemspec, :gem] do
+task :release => [:dist, :gem] do
   gems = Dir[File.join(This.pkgdir, '*.gem')].flatten
-  raise "which one? : #{ gems.inspect }" if gems.size > 1
-  raise "no gems?" if gems.size < 1
+  abort "which one? : #{ gems.inspect }" if gems.size > 1
+  abort "no gems?" if gems.size < 1
 
   cmd = "gem push #{ This.gem }"
-  puts cmd
-  puts
-  system(cmd)
-  abort("cmd(#{ cmd }) failed with (#{ $?.inspect })") unless $?.exitstatus.zero?
-
-  cmd = "rubyforge login && rubyforge add_release #{ This.rubyforge_project } #{ This.lib } #{ This.version } #{ This.gem }"
   puts cmd
   puts
   system(cmd)
@@ -253,58 +265,66 @@ BEGIN {
   require 'rbconfig'
   require 'pp'
 
-# fu shortcut
+# fu shortcut!
 #
   Fu = FileUtils
 
-# cache a bunch of stuff about this rakefile/environment
+# guess a bunch of stuff about this rakefile/environment based on the
 #
   This = OpenStruct.new
 
   This.file = File.expand_path(__FILE__)
   This.dir = File.dirname(This.file)
   This.pkgdir = File.join(This.dir, 'pkg')
+  This.basename = File.basename(This.dir)
 
-# grok lib
+# load actual shit _lib
 #
-  lib = ENV['LIB']
-  unless lib
-    lib = File.basename(Dir.pwd).sub(/[-].*$/, '')
+  _libpath = ["./lib/#{ This.basename }/_lib.rb", "./lib/#{ This.basename }.rb"]
+  _lib = _libpath.detect{|l| test(?s, l)}
+
+  abort "could not find a _lib in ./lib/ via #{ _libpath.join(':') }" unless _lib
+
+  This._lib = _lib
+  require This._lib
+
+# extract the name from the _lib
+#
+  lines = IO.binread(This._lib).split("\n")
+  re = %r`\A \s* (module|class) \s+ ([^\s]+) \s* \z`iomx
+  name = nil
+  lines.each do |line|
+    match = line.match(re)
+    if match
+      name = match.to_a.last
+      break
+    end
   end
-  This.lib = lib
-
-# grok version
-#
-  version = ENV['VERSION']
-  unless version
-    require "./lib/#{ This.lib }"
-    This.name = lib.capitalize
-    This.object = eval(This.name)
-    version = This.object.send(:version)
+  unless name
+    abort "could not extract `name` from #{ This._lib }"
   end
-  This.version = version
+  This.name = name
+  This.basename = This.name.downcase
 
-# see if dependencies are export by the module
+# now, fully grok This 
 #
-  if This.object.respond_to?(:dependencies)
-    This.dependencies = This.object.dependencies
-  end
-
-# we need to know the name of the lib an it's version
-#
-  abort('no lib') unless This.lib
-  abort('no version') unless This.version
+  This.object       = eval(This.name)
+  This.version      = This.object.version
+  This.dependencies = This.object.dependencies
+  This.summary      = This.object.summary
+  This.description  = This.object.respond_to?(:description) ? This.object.description : This.summary
+  This.license      = This.object.respond_to?(:license) ? This.object.license : IO.binread('LICENSE').strip
 
 # discover full path to this ruby executable
 #
-  c = Config::CONFIG
+  c = RbConfig::CONFIG
   bindir = c["bindir"] || c['BINDIR']
   ruby_install_name = c['ruby_install_name'] || c['RUBY_INSTALL_NAME'] || 'ruby'
   ruby_ext = c['EXEEXT'] || ''
   ruby = File.join(bindir, (ruby_install_name + ruby_ext))
   This.ruby = ruby
 
-# some utils
+# some utils, alwayze teh utils...
 #
   module Util
     def indent(s, n = 2)
@@ -319,7 +339,8 @@ BEGIN {
       next if line =~ %r/^\s*$/
       indent = line[%r/^\s*/] and break
     end
-    indent ? s.gsub(%r/^#{ indent }/, "") : s
+    unindented = indent ? s.gsub(%r/^#{ indent }/, "") : s
+    unindented.strip
   end
     extend self
   end
@@ -327,16 +348,53 @@ BEGIN {
 # template support
 #
   class Template
+    def Template.indent(string, n = 2)
+      string = string.to_s
+      n = n.to_i
+      padding = (42 - 10).chr * n
+      initial = %r/^#{ Regexp.escape(padding) }/
+      #require 'debug'
+      #binding.break
+      Util.indent(string, n).sub(initial, '')
+    end
     def initialize(&block)
       @block = block
       @template = block.call.to_s
     end
     def expand(b=nil)
-      ERB.new(Util.unindent(@template)).result((b||@block).binding)
+      ERB.new(Util.unindent(@template), trim_mode: '%<>-').result((b||@block).binding)
     end
     alias_method 'to_s', 'expand'
   end
   def Template(*args, &block) Template.new(*args, &block) end
+
+# os / platform support 
+#
+  module Platform
+    def Platform.windows?
+      (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def Platform.darwin?
+     (/darwin/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def Platform.mac?
+      Platform.darwin?
+    end
+
+    def Platform.unix?
+      !Platform.windows?
+    end
+
+    def Platform.linux?
+      Platform.unix? and not Platform.darwin?
+    end
+
+    def Platform.jruby?
+      RUBY_ENGINE == 'jruby'
+    end
+  end
 
 # colored console output support
 #
