@@ -3,7 +3,7 @@
 
 Gem::Specification::new do |spec|
   spec.name = "map"
-  spec.version = "6.7.0"
+  spec.version = "8.0.0"
   spec.required_ruby_version = '>= 3.0'
   spec.platform = Gem::Platform::RUBY
   spec.summary = "the perfect ruby data structure"
@@ -23,7 +23,18 @@ Gem::Specification::new do |spec|
  "lib/map.rb",
  "lib/map/_lib.rb",
  "lib/map/options.rb",
+ "lib/map/ordering.rb",
  "map.gemspec",
+ "specs",
+ "specs/001-ordered-map-module",
+ "specs/001-ordered-map-module/checklists",
+ "specs/001-ordered-map-module/checklists/requirements.md",
+ "specs/001-ordered-map-module/data-model.md",
+ "specs/001-ordered-map-module/plan.md",
+ "specs/001-ordered-map-module/quickstart.md",
+ "specs/001-ordered-map-module/research.md",
+ "specs/001-ordered-map-module/spec.md",
+ "specs/001-ordered-map-module/tasks.md",
  "test",
  "test/leak.rb",
  "test/lib",

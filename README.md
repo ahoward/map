@@ -197,3 +197,72 @@ DESCRIPTION
   #=> [:x, :z] => 42.0
 
 ```
+
+
+TESTING
+-------
+
+map.rb supports two ordering implementations:
+
+1. **Ruby 1.9+**: Uses native Hash ordering (memory optimized, no @keys array)
+2. **Ruby < 1.9**: Uses Map::Ordering module with explicit @keys array
+
+### Testing Both Code Paths
+
+The `MAP_FORCE_ORDERING=1` environment variable forces inclusion of the Map::Ordering
+module **on Ruby >= 1.9 only**, allowing you to test the legacy ordering code path on
+modern Ruby versions. (On Ruby < 1.9, the module is always included regardless of this
+setting, since it's required for Hash ordering.)
+
+```sh
+# Test with native Hash ordering (Ruby 1.9+ default)
+rake test
+rake test:without_ordering
+
+# Test with Map::Ordering module (simulates Ruby < 1.9)
+MAP_FORCE_ORDERING=1 rake test
+rake test:with_ordering
+
+# Quick verification of both modes
+ruby test/verify_ordering.rb
+MAP_FORCE_ORDERING=1 ruby test/verify_ordering.rb
+```
+
+Both modes pass the same 56 tests with 4940 assertions, proving functional equivalence.
+
+### Testing Across Ruby Versions
+
+**Quick validation (RECOMMENDED):**
+
+```sh
+# Test both code paths on your current Ruby
+./test_hash_ordering.sh
+
+# Summary output shows:
+#   - Native mode: no @keys (optimized)
+#   - Forced mode: has @keys (simulates Ruby < 1.9)
+#   - Both: 56 tests, 4940 assertions pass
+```
+
+**Test across multiple Ruby versions:**
+
+```sh
+# Test all installed Ruby versions automatically
+./test_all_rubies.sh
+
+# Or manually test with specific Ruby versions
+RBENV_VERSION=3.2.8 ./test_hash_ordering.sh
+RBENV_VERSION=3.3.4 rake test
+RBENV_VERSION=3.3.4 MAP_FORCE_ORDERING=1 rake test
+```
+
+**Note**: Old Ruby Docker images (< 2.0) are no longer available. Use `MAP_FORCE_ORDERING=1`
+to test the Ruby < 1.9 code path on modern Ruby - it uses the exact same `Map::Ordering`
+module with the same `@keys` array logic and behavior.
+
+**CI/CD testing:**
+
+The `.github/workflows/test.yml` workflow automatically tests across Ruby 2.7, 3.0,
+3.1, 3.2, 3.3, and head on every push and pull request, running both with and without
+the ordering module.
+
