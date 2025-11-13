@@ -2,3 +2,24 @@
 TODO
 .rvmrc
 a.rb
+
+# Ruby
+.bundle/
+log/
+tmp/
+*.gem
+vendor/bundle/
+__pycache__/
+*.pyc
+*.log
+.env*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
