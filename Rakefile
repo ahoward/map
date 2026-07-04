@@ -20,24 +20,6 @@ namespace :test do
   task(:unit){ run_tests!(:unit) }
   task(:functional){ run_tests!(:functional) }
   task(:integration){ run_tests!(:integration) }
-
-  # Test with Map::Ordering module forced (simulates Ruby < 1.9)
-  task(:with_ordering) do
-    ENV['MAP_FORCE_ORDERING'] = '1'
-    puts "\n#{ '=' * 60 }"
-    puts "Running tests WITH Map::Ordering module (MAP_FORCE_ORDERING=1)"
-    puts "#{ '=' * 60 }\n\n"
-    run_tests!
-  end
-
-  # Test without Map::Ordering module (Ruby 1.9+ native Hash ordering)
-  task(:without_ordering) do
-    ENV.delete('MAP_FORCE_ORDERING')
-    puts "\n#{ '=' * 60 }"
-    puts "Running tests WITHOUT Map::Ordering module (Ruby 1.9+ mode)"
-    puts "#{ '=' * 60 }\n\n"
-    run_tests!
-  end
 end
 
 def run_tests!(which = nil)

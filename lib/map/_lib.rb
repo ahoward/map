@@ -1,5 +1,5 @@
 class Map
-  VERSION = '8.0.0'
+  VERSION = '9.0.0'
 
   class << Map
     def version
